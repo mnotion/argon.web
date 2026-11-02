@@ -14,8 +14,8 @@
     main { width: min(100%, 560px); text-align: center; }
     .mark { display: inline-block; margin-bottom: 36px; color: var(--gold); font-size: 24px; font-weight: 500; letter-spacing: -2px; }
     h1 { margin: 0 0 28px; font-size: clamp(42px, 8vw, 64px); line-height: 1.04; letter-spacing: -0.065em; font-weight: 550; }
-    .download { display: inline-flex; align-items: center; justify-content: center; gap: 12px; min-height: 54px; padding: 0 24px; border: 1px solid var(--ink); border-radius: 5px; background: var(--ink); color: #fff; font-size: 15px; font-weight: 600; text-decoration: none; transition: background .18s ease, color .18s ease, transform .18s ease; }
-    .download:hover { background: transparent; color: var(--ink); transform: translateY(-1px); }
+    .download { display: inline-flex; align-items: center; justify-content: center; gap: 12px; min-height: 54px; padding: 0 24px; border: 1px solid var(--ink); border-radius: 5px; background: var(--ink); color: #fff; font-size: 15px; font-weight: 600; text-decoration: none; cursor: pointer; transition: background .18s ease, color .18s ease; }
+    .download:hover { background: transparent; color: var(--ink); }
     .download:focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; }
     .arrow { font-size: 18px; line-height: 1; }
     @media (prefers-reduced-motion: reduce) { .download { transition: none; } }
