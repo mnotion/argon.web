@@ -52,3 +52,18 @@ let mcJour = "Noreply"
     );
     }
   );
+
+const applyOverlay=document.getElementById('apply-overlay');
+const openApply=document.getElementById('open-apply');
+const closeApply=document.getElementById('close-apply');
+function setApplyOpen(open){
+  applyOverlay.classList.toggle('open',open);
+  applyOverlay.setAttribute('aria-hidden',String(!open));
+  openApply.setAttribute('aria-expanded',String(open));
+  if(open) closeApply.focus(); else openApply.focus();
+}
+openApply.setAttribute('aria-expanded','false');
+openApply.addEventListener('click',()=>setApplyOpen(true));
+closeApply.addEventListener('click',()=>setApplyOpen(false));
+applyOverlay.addEventListener('click',event=>{if(event.target===applyOverlay)setApplyOpen(false)});
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&applyOverlay.classList.contains('open'))setApplyOpen(false)});
