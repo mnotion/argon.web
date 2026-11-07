@@ -17,7 +17,10 @@
     h2 { margin:0 0 14px; color:var(--muted); font-size:13px; font-weight:600; letter-spacing:.14em; text-transform:lowercase; }
     .copy-unit,.launch { display:inline-flex; align-items:center; justify-content:center; min-height:52px; max-width:100%; padding:10px 16px; border:1px solid #3a3c35; border-radius:8px; background:#171914; color:var(--text); font:inherit; cursor:pointer; overflow-wrap:anywhere; text-decoration:none; transition:box-shadow .2s ease,border-color .2s ease,color .2s ease; }
     .address,.port { font-family:hello,ui-monospace,SFMono-Regular,Menlo,monospace; font-size:clamp(17px,3vw,25px); line-height:1.2; font-weight:500; letter-spacing:-.03em; }
-    .port { margin-top:12px; }
+    .port { margin-top:0; }
+    .bedrock .details { display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap; }
+    .bedrock .launch { display:flex; width:max-content; margin:22px auto 0; color:#8fc8ff; border-color:#285a83; box-shadow:0 0 12px #3a9bff18,inset 0 0 10px #3a9bff08; }
+    .bedrock .launch:hover { border-color:#4a9fe8; box-shadow:0 0 18px #3a9bff30; }
     .java .address { border-color:#285c38; box-shadow:0 0 12px #32c65a18,inset 0 0 10px #32c65a08; }
     .java .address:hover { border-color:#43b765; box-shadow:0 0 18px #32c65a30; }
     .bedrock .address,.bedrock .port,.bedrock .launch { border-color:#642e32; box-shadow:0 0 12px #ef454518,inset 0 0 10px #ef454508; }
@@ -40,9 +43,11 @@
       </div>
       <div class="server bedrock">
         <h2>bedrock edition</h2>
-        <button class="copy-unit address" type="button" data-copy="argon.serv.lol" aria-label="copy bedrock server address">argon.serv.lol</button>
-        <a class="launch" href="minecraft://?addExternalServer=argon,argon.serv.lol:3045">open with bedrock</a>
-        <button class="copy-unit port" type="button" data-copy="3045" aria-label="copy bedrock port">Port: 3045</button>
+        <div class="details">
+          <button class="copy-unit address" type="button" data-copy="argon.serv.lol" aria-label="copy bedrock server address">argon.serv.lol</button>
+          <button class="copy-unit port" type="button" data-copy="3045" aria-label="copy bedrock port">Port: 3045</button>
+        </div>
+        <a class="launch" href="minecraft://?addExternalServer=argon,argon.serv.lol:3045">Open with bedrock</a>
       </div>
     </section>
   </main>
