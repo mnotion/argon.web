@@ -23,9 +23,7 @@
     .bedrock .address,.bedrock .port,.bedrock .launch { border-color:#f0c2c5; box-shadow:none; }
     .bedrock .address:hover,.bedrock .port:hover,.bedrock .launch:hover { border-color:#d64a52; box-shadow:none; }
     .launch { margin-top:12px; font-size:14px; font-weight:600; letter-spacing:.02em; }
-    .copy-unit:focus-visible,.launch:focus-visible,.discussion-link:focus-visible { outline:2px solid #c6a96a; outline-offset:4px; }
-    .discussion-link { position:fixed; left:22px; bottom:22px; display:inline-flex; padding:11px 18px; border:1px solid #dedede; border-radius:8px; color:#525252; background:#fafafa; text-decoration:none; font-size:14px; font-weight:600; transition:border-color .2s,color .2s; }
-    .discussion-link:hover { color:var(--text); border-color:#a3a3a3; }
+    .copy-unit:focus-visible,.launch:focus-visible { outline:2px solid #c6a96a; outline-offset:4px; }
     #toast { position:fixed; top:20px; right:20px; padding:12px 18px; border:1px solid var(--border); border-radius:9px; background:#fff; color:var(--text); box-shadow:0 8px 30px #0001; opacity:0; transform:translateY(-8px); pointer-events:none; transition:opacity .18s ease,transform .18s ease; }
     #toast.show { opacity:1; transform:translateY(0); }
     @media(max-width:560px) { .servers { grid-template-columns:1fr; gap:28px; } main { width:100%; } }
@@ -48,7 +46,6 @@
       </div>
     </section>
   </main>
-  <a class="discussion-link" href="discussion.html">Discussion</a>
   <script>
     const toast = document.getElementById('toast');
     let toastTimer;
