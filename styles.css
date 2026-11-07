@@ -221,3 +221,10 @@ body::before{
 .apply-overlay .apply-panel{overflow:visible!important}
 .apply-overlay .apply-help{top:-16px!important;right:-16px!important;display:grid!important;visibility:visible!important;opacity:1!important}
 .apply-overlay .apply-help-tip{z-index:9999!important}
+
+/* Info icon is a sibling of the scrollable panel, so the panel cannot clip it */
+.apply-card-wrap{position:relative;width:min(420px,calc(100vw - 28px));max-width:420px;overflow:visible}
+.apply-card-wrap .apply-panel{width:100%!important;max-width:100%!important;overflow-x:hidden!important;overflow-y:auto!important}
+.apply-card-wrap .apply-help{position:absolute!important;top:-16px!important;right:-16px!important;width:34px!important;height:34px!important;display:grid!important;place-items:center!important;z-index:100!important;border:2px solid #1688ff!important;border-radius:50%!important;background:#0878e8!important;color:#fff!important;font:bold 20px/1 Arial!important;cursor:help!important;padding:0!important;visibility:visible!important;opacity:1!important}
+.apply-card-wrap .apply-help-tip{display:none;position:absolute;top:42px;right:0;width:min(330px,calc(100vw - 36px));padding:15px 16px;background:#202020;color:#eee;border:1px solid #1688ff;border-radius:10px;box-shadow:0 8px 28px #0009;font:14px/1.5 Arial;text-align:left;white-space:normal;z-index:101}
+.apply-card-wrap .apply-help:hover .apply-help-tip,.apply-card-wrap .apply-help:focus-visible .apply-help-tip{display:block}
