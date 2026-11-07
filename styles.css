@@ -116,3 +116,9 @@ animation:starDrift 65s linear infinite reverse,starTwinkle 4s ease-in-out infin
 .java .java-copy.port.copied .java-copy__icon{background:#159447!important;border-left-color:#159447!important}
 .port-info{position:absolute;left:50%;bottom:calc(100% + 9px);transform:translate(-50%,4px);width:max-content;max-width:230px;padding:8px 11px;border:1px solid #555;border-radius:8px;background:#292929;color:#eee;font:500 12px/1.35 Inter,system-ui,sans-serif;white-space:normal;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .15s,transform .15s;z-index:40}
 .java .java-copy.port:hover .port-info,.java .java-copy.port:focus-visible .port-info{opacity:1;visibility:visible;transform:translate(-50%,0)}
+
+/* Make Java port button more translucent */
+.java .java-copy.port{background:rgba(100,100,100,.22);border-color:rgba(180,180,180,.35);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
+.java .java-copy.port .java-copy__icon{background:rgba(130,130,130,.28);border-left-color:rgba(180,180,180,.3)}
+.java .java-copy.port:hover{background:rgba(110,110,110,.3);border-color:rgba(200,200,200,.5)}
+.java .java-copy.port:hover .java-copy__icon{background:rgba(145,145,145,.35)}
