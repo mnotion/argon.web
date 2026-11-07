@@ -181,3 +181,10 @@ body::before{
 .application-content{width:100%;max-width:440px}
 .application-info{width:100%;box-sizing:border-box}
 @media(max-width:760px){.apply-panel{width:min(520px,100%)}.application-layout{grid-template-columns:1fr}.application-content{max-width:none}}
+
+/* Definitive application modal layout: fixed form column + visible info column */
+.apply-overlay .apply-panel{box-sizing:border-box!important;width:min(900px,calc(100vw - 48px))!important}
+.apply-overlay .application-layout{display:grid!important;grid-template-columns:minmax(0,440px) minmax(0,1fr)!important;gap:24px!important;align-items:start!important}
+.apply-overlay .application-content{width:100%!important;max-width:440px!important;min-width:0!important}
+.apply-overlay .application-info{display:block!important;visibility:visible!important;opacity:1!important;min-width:0!important;width:100%!important;box-sizing:border-box!important}
+@media(max-width:760px){.apply-overlay .apply-panel{width:min(520px,calc(100vw - 24px))!important}.apply-overlay .application-layout{grid-template-columns:minmax(0,1fr)!important}.apply-overlay .application-content{max-width:none!important}}
