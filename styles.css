@@ -209,3 +209,10 @@ body::before{
 
 /* Correct modal width: reduce current 560px by 25%; leave height untouched */
 .apply-overlay .apply-panel{width:min(420px,calc(100vw - 28px))!important;max-width:420px!important}
+
+/* Application info hover icon outside the modal, top-right */
+.apply-panel{position:relative}
+.apply-help{position:absolute;right:-17px;top:-17px;width:34px;height:34px;border:2px solid #1688ff;border-radius:50%;background:#0878e8;color:#fff;font:bold 20px/1 Arial;display:grid;place-items:center;cursor:help;z-index:20;padding:0}
+.apply-help-tip{display:none;position:absolute;top:42px;right:0;width:min(330px,calc(100vw - 36px));padding:15px 16px;background:#202020;color:#eee;border:1px solid #1688ff;border-radius:10px;box-shadow:0 8px 28px #0009;font:14px/1.5 Arial;text-align:left;white-space:normal}
+.apply-help:hover .apply-help-tip,.apply-help:focus-visible .apply-help-tip{display:block}
+.application-info{display:none!important}
