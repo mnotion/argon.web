@@ -131,3 +131,21 @@ if(applicationForm){
     }
   });
 }
+
+
+// Live Argon player count (mcstatus.io, cached status response)
+async function refreshPlayerCount(){
+  const label=document.getElementById('player-count');
+  try{
+    const response=await fetch('https://api.mcstatus.io/v2/status/java/argon.serv.lol:10134');
+    if(!response.ok) throw new Error('Status unavailable');
+    const data=await response.json();
+    label.textContent=data.online && data.players ? data.players.online+' players online' : 'Server offline';
+    label.classList.toggle('offline',!data.online);
+  }catch{
+    label.textContent='Player count unavailable';
+    label.classList.add('offline');
+  }
+}
+refreshPlayerCount();
+setInterval(refreshPlayerCount,60000);
