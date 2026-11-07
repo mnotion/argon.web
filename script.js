@@ -100,7 +100,7 @@ if(applicationForm){
       const applicantName=String(payload['Applicant Name']||'').trim();
       const minecraftUsername=String(payload['Minecraft Username']||'').trim();
       payload._subject='Argon whitelist application — '+minecraftUsername;
-      payload.message='New Argon whitelist application\\n\\nApplicant name: '+applicantName+'\\nMinecraft username: '+minecraftUsername+'\\nEmail: '+String(payload.email||'')+'\\nDiscord user: '+String(payload['Discord user']||'Not provided');
+      payload.message='New Argon whitelist application\n\nApplicant name: '+applicantName+'\nMinecraft username: '+minecraftUsername+'\nEmail: '+String(payload.email||'')+'\nDiscord user: '+String(payload['Discord user']||'Not provided');
 
       const response=await fetch('https://formsubmit.co/ajax/argonmcadmin@gmail.com',{
         method:'POST',
