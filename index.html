@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#10110f">
-  <meta name="description" content="Connect to the Argon Minecraft server on Java or Bedrock.">
-  <title>Argon — Minecraft Server</title>
+  <meta name="description" content="Connect to the argon minecraft server on java or bedrock.">
+  <title>argon — minecraft server</title>
   <style>
     :root {
       color-scheme: dark;
@@ -28,8 +28,6 @@
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
     main { width: min(100%, 520px); text-align: center; }
-    .brand { color: var(--accent); font-size: 18px; letter-spacing: -1px; margin-bottom: 18px; }
-    h1 { margin: 0 0 32px; font-size: clamp(34px, 8vw, 54px); letter-spacing: -0.06em; font-weight: 600; }
     .servers { display: grid; gap: 14px; }
     .server {
       padding: 24px;
@@ -37,26 +35,77 @@
       border-radius: 12px;
       background: var(--panel);
     }
-    h2 { margin: 0 0 12px; color: var(--muted); font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; }
-    .address { font-size: clamp(19px, 5vw, 24px); font-weight: 500; letter-spacing: -.03em; overflow-wrap: anywhere; }
+    h2 { margin: 0 0 12px; color: var(--muted); font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: lowercase; }
+    .copy-unit {
+      display: block;
+      width: 100%;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: var(--text);
+      font: inherit;
+      cursor: pointer;
+      overflow-wrap: anywhere;
+    }
+    .address { font-size: clamp(19px, 5vw, 24px); font-weight: 500; letter-spacing: -.03em; }
     .port { margin-top: 8px; color: var(--muted); font-size: 14px; }
+    .copy-unit:hover { color: var(--accent); }
+    .copy-unit:focus-visible { outline: 2px solid var(--accent); outline-offset: 5px; border-radius: 4px; }
+    #toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 12px 18px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      background: var(--panel);
+      color: var(--text);
+      box-shadow: 0 8px 30px #0005;
+      opacity: 0;
+      transform: translateY(-8px);
+      pointer-events: none;
+      transition: opacity .18s ease, transform .18s ease;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+    @media (prefers-reduced-motion: reduce) { #toast { transition: none; } }
   </style>
 </head>
 <body>
+  <div id="toast" role="status" aria-live="polite">copied!</div>
   <main>
-    <div class="brand" aria-hidden="true">{Ar}</div>
-    <h1>Join Argon</h1>
-    <section class="servers" aria-label="Server addresses">
+    <section class="servers" aria-label="server addresses">
       <div class="server">
-        <h2>Java Edition</h2>
-        <div class="address">argon.serv.lol</div>
+        <h2>java edition</h2>
+        <button class="copy-unit address" type="button" data-copy="argon.serv.lol" aria-label="copy java server address">argon.serv.lol</button>
       </div>
       <div class="server">
-        <h2>Bedrock Edition</h2>
-        <div class="address">argon.serv.lol</div>
-        <div class="port">Port: 3045</div>
+        <h2>bedrock edition</h2>
+        <button class="copy-unit address" type="button" data-copy="argon.serv.lol" aria-label="copy bedrock server address">argon.serv.lol</button>
+        <button class="copy-unit port" type="button" data-copy="3045" aria-label="copy bedrock port">Port: 3045</button>
       </div>
     </section>
   </main>
+  <script>
+    const toast = document.getElementById('toast');
+    let toastTimer;
+    document.querySelectorAll('[data-copy]').forEach((button => {
+      button.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(button.dataset.copy);
+          toast.classList.add('show');
+          clearTimeout(toastTimer);
+          toastTimer = setTimeout(() => toast.classList.remove('show'), 1800);
+        } catch {
+          toast.textContent = 'copy failed';
+          toast.classList.add('show');
+          clearTimeout(toastTimer);
+          toastTimer = setTimeout(() => {
+            toast.classList.remove('show');
+            toast.textContent = 'copied!';
+          }, 1800);
+        }
+      });
+    });
+  </script>
 </body>
 </html>
