@@ -1,154 +1,25 @@
-:root { 
-    color-scheme:light; --bg:#ffffff; --text:#171717; --muted:#737373; --border:#e5e5e5; 
-}
-    * { box-sizing:border-box; }
-
-    
-    html,body {
-         margin:0; min-height:100%; 
-        }
-    body { 
-        min-height:100vh; display:grid; place-items:center; padding:24px; background:var(--bg); color:var(--text); font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; 
-    }
-
-
-    main {
-        width:min(100%,1100px);
-        text-align:center; 
-        }
-
-
-    .servers {
-         display:grid; 
-         grid-template-columns:repeat(2,minmax(0,1fr)); 
-         gap:clamp(70px,14vw,180px); 
-         align-items:start; 
-        }
-    .server { 
-        padding:0; border:0; 
-        background:transparent; 
-        min-width:0; 
-    }
-    
-    h2 { 
-        margin:0 0 14px; 
-        color:var(--muted); 
-        font-size:13px; 
-        font-weight:600; 
-        letter-spacing:.14em; 
-        text-transform:lowercase; 
-    }
-
-
-    .copy-unit,.launch { 
-        display:inline-flex; 
-        align-items:center; 
-        justify-content:center; 
-        min-height:52px; 
-        max-width:100%; 
-        padding:10px 16px; 
-        border:1px solid #dedede; 
-        border-radius:8px; 
-        background:#fafafa; 
-        color:var(--text); 
-        font:inherit; cursor:pointer; 
-        overflow-wrap:anywhere; text-decoration:none; 
-        transition:box-shadow .2s ease,border-color .2s ease,color .2s ease; }
-
-
-
-
-
-
-    .address,.port { 
-        font-family:hello,ui-monospace,SFMono-Regular,Menlo,monospace; 
-        font-size:clamp(17px,3vw,25px); 
-        line-height:1.2; 
-        font-weight:500; 
-        letter-spacing:-.03em; }
-
-
-    .port { margin-top:12px; }
-
-
-    .java .address { 
-        border-color:#b8e3c4; 
-        box-shadow:none; }
-
-
-    .java .address:hover { 
-        
-        border-color:#43b765; 
-        box-shadow:none;
-    
-    }
-
-
-    .bedrock .address,
-    .bedrock .port,
-    .bedrock .launch { 
-        border-color:#f0c2c5; 
-        box-shadow:none; 
-    }
-
-
-
-    .bedrock .address:hover,
-    .bedrock .port:hover,
-    .bedrock .launch:hover { 
-        border-color:#d64a52; 
-        
-        box-shadow:none; }
-
-
-
-    .launch { 
-        margin-top:12px; 
-        font-size:14px; 
-        font-weight:600; 
-        letter-spacing:.02em; }
-
-
-    .copy-unit:focus-visible,
-    .launch:focus-visible {
-         outline:2px solid #c6a96a; 
-         outline-offset:4px;
-        
-        }
-
-
-    #toast {
-         position:fixed; 
-         top:20px; right:20px; 
-         padding:12px 18px; 
-         border:1px solid var(--border); 
-         border-radius:9px; 
-         background:#fff; 
-         color:var(--text); 
-         box-shadow:0 8px 30px #0001; 
-         opacity:0; 
-         transform:translateY(-8px); 
-         pointer-events:none; 
-         transition:opacity .18s ease,transform .18s ease; }
-         
-    #toast.show { 
-        opacity:1; 
-        transform:translateY(0); 
-    
-    }
-
-
-    @media(max-width:560px) { 
-        .servers { 
-            grid-template-columns:1fr; 
-            gap:28px; }
-         main { width:100%; }
-         }
-
-
-    @media(prefers-reduced-motion:reduce) {
-         #toast,
-         .copy-unit,
-         .launch { 
-            transition:none; 
-        } }
+:root{color-scheme:dark;--bg:#252525;--text:#f2f2f2;--muted:#a3a3a3;--border:#444}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%}
+body{min-height:100vh;background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;padding:24px}
+main{width:min(100%,1000px);margin:0 auto}
+.servers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(40px,8vw,100px);text-align:center}
+h2{font-size:clamp(42px,6vw,64px);font-weight:500;margin:0 0 24px}
+.java h2{color:#ffd43b}.bedrock h2{color:#55aaff}
+.copy-unit,.launch{display:inline-flex;align-items:center;justify-content:center;min-height:54px;padding:12px 16px;border-radius:9px;border:1px solid #505050;background:#303030;color:var(--text);font:inherit;text-decoration:none;cursor:pointer}
+.address,.port{font-family:ui-monospace,Menlo,monospace;font-size:clamp(16px,2.5vw,23px)}
+.bedrock-details{display:flex;flex-direction:column;align-items:center;gap:10px}
+.bedrock .address,.bedrock .port{border-color:#3979b8}
+.launch{margin:18px auto 0;display:flex;width:max-content;background:#125da8;color:#fff;border-color:#369bff;box-shadow:0 0 14px #168bff77;font-weight:650}
+.launch:hover{background:#0878d1;box-shadow:0 0 20px #168bffbb}
+#toast{position:fixed;top:20px;right:20px;padding:12px 18px;border:1px solid var(--border);border-radius:9px;background:#303030;opacity:0;pointer-events:none}
+#toast.show{opacity:1}
+.form-section{max-width:680px;margin:100px auto 40px;padding:30px;border:1px solid #444;border-radius:16px;background:#2b2b2b}
+.form-section h1{font-size:32px;font-weight:500;margin:0 0 8px}
+.form-section .intro{color:#aaa;margin:0 0 24px}
+.application-form{display:grid;gap:16px}
+.application-form label{display:grid;gap:8px;color:#ddd;font-size:14px}
+.application-form input,.application-form textarea,.application-form select{width:100%;padding:12px;border:1px solid #505050;border-radius:8px;background:#202020;color:#f2f2f2;font:inherit}
+.application-form textarea{min-height:120px;resize:vertical}
+.application-form button{border:1px solid #369bff;border-radius:8px;padding:13px;background:#125da8;color:white;font:inherit;font-weight:650;cursor:pointer}
+.application-form button:hover{background:#0878d1}
+@media(max-width:560px){.servers{grid-template-columns:1fr;gap:48px}.form-section{margin-top:70px;padding:20px}h2{font-size:46px}}
