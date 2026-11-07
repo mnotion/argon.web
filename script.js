@@ -45,7 +45,11 @@ let mcJour = "Noreply"
 
         if(!success) success=fallbackCopy(text);
 
-        button.classList.toggle('copied',success);\n        if(success){clearTimeout(button.copyStateTimer);button.copyStateTimer=setTimeout(()=>button.classList.remove('copied'),1600);}\n        showToast(\n          success?'copied!':'copy failed — select and copy manually'\n        );
+        button.classList.toggle('copied',success);
+        if(success){clearTimeout(button.copyStateTimer);button.copyStateTimer=setTimeout(()=>button.classList.remove('copied'),1600);}
+        showToast(
+          success?'copied!':'copy failed — select and copy manually'
+        );
       }
     );
     }
