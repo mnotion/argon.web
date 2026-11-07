@@ -14,7 +14,7 @@
     main { width:min(100%,1100px); text-align:center; }
     .servers { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:clamp(70px,14vw,180px); align-items:start; }
     .server { padding:0; border:0; background:transparent; min-width:0; }
-    h2 { margin:0 0 14px; color:var(--muted); font-size:13px; font-weight:600; letter-spacing:.14em; text-transform:lowercase; }
+    h2 { margin:0 0 22px; color:var(--text); font-size:clamp(34px,6vw,64px); line-height:1; font-weight:800; letter-spacing:-.05em; text-transform:lowercase; }
     .copy-unit,.launch { display:inline-flex; align-items:center; justify-content:center; min-height:52px; max-width:100%; padding:10px 16px; border:1px solid #3a3c35; border-radius:8px; background:#171914; color:var(--text); font:inherit; cursor:pointer; overflow-wrap:anywhere; text-decoration:none; transition:box-shadow .2s ease,border-color .2s ease,color .2s ease; }
     .address,.port { font-family:hello,ui-monospace,SFMono-Regular,Menlo,monospace; font-size:clamp(17px,3vw,25px); line-height:1.2; font-weight:500; letter-spacing:-.03em; }
     .port { margin-top:0; }
@@ -38,11 +38,11 @@
   <main>
     <section class="servers" aria-label="server addresses">
       <div class="server java">
-        <h2>java edition</h2>
+        <h2>java</h2>
         <button class="copy-unit address" type="button" data-copy="argon.serv.lol" aria-label="copy java server address">argon.serv.lol</button>
       </div>
       <div class="server bedrock">
-        <h2>bedrock edition</h2>
+        <h2>bedrock</h2>
         <div class="details">
           <button class="copy-unit address" type="button" data-copy="argon.serv.lol" aria-label="copy bedrock server address">argon.serv.lol</button>
           <button class="copy-unit port" type="button" data-copy="3045" aria-label="copy bedrock port">Port: 3045</button>
