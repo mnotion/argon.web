@@ -235,3 +235,7 @@ body::before{
 
 /* Main: keep the page much more visible behind the open application */
 .apply-overlay{background:rgba(0,0,0,.28)!important}
+
+
+/* Main: make the application backdrop nearly clear */
+.apply-overlay{background:rgba(0,0,0,.08)!important}
