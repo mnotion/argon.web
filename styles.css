@@ -89,7 +89,11 @@ animation:starDrift 65s linear infinite reverse,starTwinkle 4s ease-in-out infin
 .java-launch:hover{background:#c09516;box-shadow:0 0 20px #ffd43b77}
 
 /* Small blue Java port info tooltip */
-.java h2{display:flex;align-items:center;justify-content:center;gap:10px}
-.info-tip{position:relative;display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border:1px solid #2498ff;border-radius:50%;background:#0878d1;color:#fff;font:700 11px/1 system-ui,sans-serif;cursor:help;vertical-align:middle}
+.java h2{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:24px}
+.info-tip{position:relative;display:inline-flex;align-items:center;justify-content:center;flex:0 0 17px;width:17px;height:17px;border:1px solid #2498ff;border-radius:50%;background:#0878d1;color:#fff;font:700 11px/1 system-ui,sans-serif;cursor:help;vertical-align:middle}
 .info-tip::after{content:attr(data-tooltip);position:absolute;left:50%;top:calc(100% + 9px);transform:translate(-50%,-4px);width:max-content;max-width:220px;padding:8px 11px;border:1px solid #2587d7;border-radius:8px;background:#09213a;color:#d7edff;font:500 12px/1.35 Inter,system-ui,sans-serif;white-space:normal;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .15s,transform .15s;z-index:40}
 .info-tip:hover::after,.info-tip:focus-visible::after{opacity:1;visibility:visible;transform:translate(-50%,0)}
+
+/* Match Java address/port vertical spacing to Bedrock */
+.java .java-copy+.java-copy{margin-top:8px}
+.java .java-launch{margin-top:18px}
