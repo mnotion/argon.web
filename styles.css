@@ -197,3 +197,9 @@ body::before{
 .apply-overlay .application-info p:last-child{margin-bottom:0!important}
 .apply-overlay .application-content .application-form label{margin-bottom:12px!important}
 .apply-overlay .application-content h1{margin-bottom:6px!important}
+
+/* Actually halve the modal's desktop width */
+.apply-overlay .apply-panel{width:min(560px,calc(100vw - 28px))!important;max-width:560px!important;box-sizing:border-box!important}
+.apply-overlay .application-layout{grid-template-columns:minmax(0,1fr)!important;gap:16px!important}
+.apply-overlay .application-content{max-width:none!important;width:100%!important}
+.apply-overlay .application-info{width:100%!important}
