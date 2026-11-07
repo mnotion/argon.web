@@ -106,3 +106,13 @@ animation:starDrift 65s linear infinite reverse,starTwinkle 4s ease-in-out infin
 .java .java-copy.port:hover::after{content:"You don’t need the port for Java!";font-size:12px;white-space:nowrap}
 .java .java-copy.port.copied{background:#092719!important;border-color:#35c875!important;color:#9af0bb!important}
 .java .java-copy.port.copied .java-copy__icon{background:#159447!important;border-left-color:#159447!important}
+
+/* Java port is neutral gray; tooltip appears over the port on hover */
+.java .java-copy.port{background:#252525;color:#d2d2d2;border-color:#555}
+.java .java-copy.port .java-copy__icon{background:#484848;border-left-color:#555}
+.java .java-copy.port:hover{background:#202020;border-color:#777}
+.java .java-copy.port:hover .java-copy__icon{background:#484848;border-left-color:#555}
+.java .java-copy.port.copied{background:#092719!important;border-color:#35c875!important;color:#9af0bb!important}
+.java .java-copy.port.copied .java-copy__icon{background:#159447!important;border-left-color:#159447!important}
+.port-info{position:absolute;left:50%;bottom:calc(100% + 9px);transform:translate(-50%,4px);width:max-content;max-width:230px;padding:8px 11px;border:1px solid #555;border-radius:8px;background:#292929;color:#eee;font:500 12px/1.35 Inter,system-ui,sans-serif;white-space:normal;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .15s,transform .15s;z-index:40}
+.java .java-copy.port:hover .port-info,.java .java-copy.port:focus-visible .port-info{opacity:1;visibility:visible;transform:translate(-50%,0)}
