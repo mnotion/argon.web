@@ -138,6 +138,7 @@ const playerCount=document.getElementById('player-count');
 const playersPanel=document.getElementById('players-panel');
 const playersList=document.getElementById('players-list');
 const playersClose=document.getElementById('players-close');
+const playersRefresh=document.getElementById('players-refresh');
 function setPlayersOpen(open){
   playersPanel.classList.toggle('open',open);
   playersPanel.setAttribute('aria-hidden',String(!open));
@@ -145,22 +146,18 @@ function setPlayersOpen(open){
 }
 playerCount.addEventListener('click',()=>setPlayersOpen(!playersPanel.classList.contains('open')));
 playersClose.addEventListener('click',()=>setPlayersOpen(false));
+playersRefresh.addEventListener('click',()=>refreshPlayerCount(true));
 document.addEventListener('keydown',event=>{if(event.key==='Escape')setPlayersOpen(false)});
 document.addEventListener('click',event=>{
   if(playersPanel.classList.contains('open')&&!playersPanel.contains(event.target)&&event.target!==playerCount)setPlayersOpen(false);
 });
 function renderPlayers(list,total,unavailableMessage){
   playersList.replaceChildren();
-  const info=document.createElement('p');
-  info.className='players-empty';
-  if(list.length){
-    info.textContent='Server supplied '+list.length+' player name'+(list.length===1?'':'s')+
-      (Number.isFinite(total)?' for '+total+' online players.':'.');
-  }else{
-    info.textContent=unavailableMessage ||
-      (total>0?'Server reports '+total+' players online, but is not providing their names.':'No players are currently reported online.');
+  if(!list.length){
+    const info=document.createElement('p');info.className='players-empty';
+    info.textContent=unavailableMessage || (total>0?'Player names are unavailable from the server.':'No players are currently reported online.');
+    playersList.append(info);
   }
-  playersList.append(info);
   list.forEach(player=>{
     const username=player.name_clean||player.name_raw||'Unknown';
     const avatarKey=player.uuid||username;
@@ -171,9 +168,10 @@ function renderPlayers(list,total,unavailableMessage){
     row.append(avatar,name);playersList.append(row);
   });
 }
-async function refreshPlayerCount(){
+async function refreshPlayerCount(manual=false){
+  if(manual){playersRefresh.disabled=true;playersRefresh.classList.add('refreshing');}
   try{
-    const response=await fetch('https://api.mcstatus.io/v2/status/java/argon.serv.lol:10134');
+    const response=await fetch('https://api.mcstatus.io/v2/status/java/argon.serv.lol:10134'+(manual?'?refresh='+Date.now():''));
     if(!response.ok)throw new Error('Status unavailable');
     const data=await response.json();
     const total=data.online&&data.players?Number(data.players.online):0;
@@ -184,6 +182,8 @@ async function refreshPlayerCount(){
   }catch{
     playerCount.textContent='Player count unavailable';playerCount.classList.add('offline');
     renderPlayers([],null,'Player data is unavailable right now.');
+  }finally{
+    if(manual){playersRefresh.disabled=false;playersRefresh.classList.remove('refreshing');}
   }
 }
 refreshPlayerCount();setInterval(refreshPlayerCount,60000);
