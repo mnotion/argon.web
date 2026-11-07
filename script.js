@@ -57,7 +57,8 @@ const applyOverlay=document.getElementById('apply-overlay');
 const openApply=document.getElementById('open-apply');
 const closeApply=document.getElementById('close-apply');
 function setApplyOpen(open){
-  applyOverlay.classList.toggle('open',open);\n  document.body.classList.toggle('form-open',open);
+  applyOverlay.classList.toggle('open',open);
+  document.body.classList.toggle('form-open',open);
   applyOverlay.setAttribute('aria-hidden',String(!open));
   openApply.setAttribute('aria-expanded',String(open));
   if(open) closeApply.focus(); else openApply.focus();
