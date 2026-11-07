@@ -1,61 +1,16 @@
 <!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#ffffff">
-
-  <meta name="description" content="Connect to the argon minecraft server on java or bedrock.">
-  <title>argon — minecraft server</title>
-
-
-  
-  <link rel="stylesheet" href="styles.css">
-</head>
-
-<body>
-
-
-  <div id="toast" role="status" aria-live="polite">copied!</div>
-  <main>
-
-    <section class="servers" aria-label="server addresses">
-      <div class="server java">
-
-        <h2>java edition</h2>
-
-        <button class="copy-unit address" 
-        type="button" 
-        data-copy="argon.serv.lol" 
-        aria-label="copy java server address">
-        argon.serv.lol
-      </button>
-      </div>
-
-
-      <div class="server bedrock">
-        <h2>bedrock edition</h2>
-
-
-        <button class="copy-unit address" 
-        type="button"
-         data-copy="argon.serv.lol" 
-         aria-label="copy bedrock server address">
-         argon.serv.lol
-        </button>
-
-        <a class="launch" 
-        href="minecraft://?addExternalServer=argon,argon.serv.lol:3045">
-        open with bedrock</a>
-        <button class="copy-unit port" type="button" data-copy="3045" aria-label="copy bedrock port">Port: 3045</button>
-      </div>
-
-    </section>
-
-
-  </main>
-
-  <script src="script.js" defer></script>
-</body>
-
-</html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#252525"><meta name="description" content="Connect to the argon minecraft server on java or bedrock."><title>argon — minecraft server</title><link rel="stylesheet" href="styles.css"></head><body>
+<div id="toast" role="status" aria-live="polite">copied!</div><main>
+<section class="servers" aria-label="server addresses"><div class="server java"><h2>Java</h2><button class="copy-unit address" type="button" data-copy="argon.serv.lol">argon.serv.lol</button></div>
+<div class="server bedrock"><h2>Bedrock</h2><div class="bedrock-details"><button class="copy-unit address" type="button" data-copy="argon.serv.lol">argon.serv.lol</button><button class="copy-unit port" type="button" data-copy="3045">Port: 3045</button></div><a class="launch" href="minecraft://?addExternalServer=argon,argon.serv.lol:3045">Play on Bedrock</a></div></section>
+<section class="form-section" id="apply"><h1>Apply to Argon</h1><p class="intro">Send a server application for review.</p>
+<form class="application-form" action="https://formsubmit.co/YOUR_EMAIL_HERE" method="POST">
+<input type="hidden" name="_subject" value="New Argon server application"><input type="hidden" name="_template" value="table"><input type="hidden" name="_captcha" value="true"><input type="text" name="_honey" style="display:none">
+<label>Minecraft username<input name="Minecraft username" required maxlength="32" placeholder="Your in-game name"></label>
+<label>Email address<input type="email" name="email" required placeholder="you@example.com"></label>
+<label>Discord username<input name="Discord username" required placeholder="username"></label>
+<label>Age<input type="number" name="Age" min="13" max="99" required></label>
+<label>How long have you played Minecraft?<input name="Minecraft experience" required placeholder="e.g. 3 years"></label>
+<label>Why do you want to join Argon?<textarea name="Application" required minlength="20" placeholder="Tell us a bit about yourself and why you'd like to join"></textarea></label>
+<label>Anything else? (optional)<textarea name="Additional information" placeholder="Optional"></textarea></label>
+<button type="submit">Submit application</button></form></section></main><script src="script.js" defer></script></body></html>
