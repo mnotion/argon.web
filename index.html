@@ -23,7 +23,9 @@
     .bedrock .address,.bedrock .port,.bedrock .launch { border-color:#642e32; box-shadow:0 0 12px #ef454518,inset 0 0 10px #ef454508; }
     .bedrock .address:hover,.bedrock .port:hover,.bedrock .launch:hover { border-color:#d64a52; box-shadow:0 0 18px #ef454530; }
     .launch { margin-top:12px; font-size:14px; font-weight:600; letter-spacing:.02em; }
-    .copy-unit:focus-visible,.launch:focus-visible { outline:2px solid #c6a96a; outline-offset:4px; }
+    .copy-unit:focus-visible,.launch:focus-visible,.discussion-link:focus-visible { outline:2px solid #c6a96a; outline-offset:4px; }
+    .discussion-link { display:inline-flex; margin-top:42px; padding:11px 18px; border:1px solid #3a3c35; border-radius:8px; color:#b9bcb0; background:#171914; text-decoration:none; font-size:14px; font-weight:600; transition:border-color .2s,color .2s; }
+    .discussion-link:hover { color:var(--text); border-color:#777b6b; }
     #toast { position:fixed; top:20px; right:20px; padding:12px 18px; border:1px solid var(--border); border-radius:9px; background:#191b17; color:var(--text); box-shadow:0 8px 30px #0005; opacity:0; transform:translateY(-8px); pointer-events:none; transition:opacity .18s ease,transform .18s ease; }
     #toast.show { opacity:1; transform:translateY(0); }
     @media(max-width:560px) { .servers { grid-template-columns:1fr; gap:28px; } main { width:100%; } }
