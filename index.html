@@ -4,26 +4,58 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#ffffff">
+
   <meta name="description" content="Connect to the argon minecraft server on java or bedrock.">
   <title>argon — minecraft server</title>
+
+
+  
   <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
+
+
   <div id="toast" role="status" aria-live="polite">copied!</div>
   <main>
+
     <section class="servers" aria-label="server addresses">
       <div class="server java">
+
         <h2>java edition</h2>
-        <button class="copy-unit address" type="button" data-copy="argon.serv.lol" aria-label="copy java server address">argon.serv.lol</button>
+
+        <button class="copy-unit address" 
+        type="button" 
+        data-copy="argon.serv.lol" 
+        aria-label="copy java server address">
+        argon.serv.lol
+      </button>
       </div>
+
+
       <div class="server bedrock">
         <h2>bedrock edition</h2>
-        <button class="copy-unit address" type="button" data-copy="argon.serv.lol" aria-label="copy bedrock server address">argon.serv.lol</button>
-        <a class="launch" href="minecraft://?addExternalServer=argon,argon.serv.lol:3045">open with bedrock</a>
+
+
+        <button class="copy-unit address" 
+        type="button"
+         data-copy="argon.serv.lol" 
+         aria-label="copy bedrock server address">
+         argon.serv.lol
+        </button>
+
+        <a class="launch" 
+        href="minecraft://?addExternalServer=argon,argon.serv.lol:3045">
+        open with bedrock</a>
         <button class="copy-unit port" type="button" data-copy="3045" aria-label="copy bedrock port">Port: 3045</button>
       </div>
+
     </section>
+
+
   </main>
+
   <script src="script.js" defer></script>
 </body>
+
 </html>
