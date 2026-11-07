@@ -271,3 +271,5 @@ body{animation:argonPageEnter .55s ease-out both}
   .apply-card-wrap .apply-panel{padding-top:58px!important}
   .apply-card-wrap .apply-help-tip{right:0!important;top:44px!important;width:min(300px,calc(100vw - 72px))!important}
 }
+/* Remove Android's square tap-highlight overlay on pressed controls */
+a,button,[role="button"],input,textarea,select{-webkit-tap-highlight-color:transparent}
