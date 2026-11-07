@@ -1,8 +1,10 @@
 :root{color-scheme:dark;--bg:#252525;--text:#f2f2f2;--muted:#a3a3a3;--border:#444}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%}
 body{min-height:100vh;background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;padding:24px}
-main{width:100%;min-height:calc(100vh - 48px);margin:0 auto;display:flex;align-items:center;justify-content:center}\n.servers{width:min(100%,1100px);margin:0 auto;}
-[hidden]{display:none!important}\n.servers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(100px,18vw,240px);text-align:center}
+main{width:100%;min-height:calc(100vh - 48px);margin:0 auto;display:flex;align-items:center;justify-content:center}
+ .servers{width:min(100%,1100px);margin:0 auto;}
+[hidden]{display:none!important}
+.servers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(100px,18vw,240px);text-align:center}
 h2{font-size:clamp(42px,6vw,64px);font-weight:500;margin:0 0 24px}
 .java h2{color:#ffd43b}.bedrock h2{color:#55aaff}
 .copy-unit,.launch{display:inline-flex;align-items:center;justify-content:center;min-height:54px;padding:12px 16px;border-radius:9px;border:1px solid #505050;background:#303030;color:var(--text);font:inherit;text-decoration:none;cursor:pointer}
@@ -14,7 +16,8 @@ h2{font-size:clamp(42px,6vw,64px);font-weight:500;margin:0 0 24px}
 #toast{position:fixed;top:20px;right:20px;padding:12px 18px;border:1px solid var(--border);border-radius:9px;background:#303030;opacity:0;pointer-events:none;z-index:20}
 #toast.show{opacity:1}
 .apply-fab{position:fixed;left:24px;bottom:24px;width:62px;height:62px;border:1px solid #369bff;border-radius:50%;background:#125da8;color:#fff;font-size:35px;line-height:1;cursor:pointer;box-shadow:0 0 18px #168bff66;transition:transform .2s,box-shadow .2s;z-index:30}
-body.form-open .apply-fab{visibility:hidden;pointer-events:none}\n.apply-fab:hover{transform:scale(1.08);box-shadow:0 0 25px #168bff99}
+body.form-open .apply-fab{visibility:hidden;pointer-events:none}
+.apply-fab:hover{transform:scale(1.08);box-shadow:0 0 25px #168bff99}
 .apply-overlay{position:fixed;inset:0;display:flex;align-items:flex-end;justify-content:flex-start;padding:24px;background:#0008;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .25s,visibility .25s;z-index:25}
 .apply-overlay.open{opacity:1;visibility:visible;pointer-events:auto}
 .apply-panel{position:relative;width:min(440px,100%);max-height:calc(100vh - 48px);overflow:auto;padding:30px;border:1px solid #4b4b4b;border-radius:18px;background:#2b2b2b;box-shadow:0 18px 60px #0008;transform:translateY(35px) scale(.96);transform-origin:bottom left;opacity:0;transition:transform .32s cubic-bezier(.2,.8,.2,1),opacity .25s}
