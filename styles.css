@@ -1,1 +1,166 @@
-:root{color-scheme:dark;--bg:#252525;--text:#f2f2f2;--muted:#a3a3a3;--border:#444}*{box-sizing:border-box}html,body{margin:0;min-height:100%}body{min-height:100vh;display:grid;place-items:center;padding:24px;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}main{width:min(100%,1100px);text-align:center}.servers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(50px,10vw,140px);align-items:start}.server{padding:0;border:0;background:transparent;min-width:0}h2{margin:0 0 28px;font-size:clamp(44px,6vw,68px)!important;font-weight:500!important;letter-spacing:.025em;text-transform:none}.java h2{color:#ffd43b!important}.bedrock h2{color:#55aaff!important}.copy-unit,.launch{display:inline-flex;align-items:center;justify-content:center;min-height:58px;max-width:100%;padding:12px 18px;border:1px solid #505050;border-radius:9px;background:#303030;color:var(--text);font:inherit;cursor:pointer;overflow-wrap:anywhere;text-decoration:none;transition:box-shadow .2s ease,border-color .2s ease,color .2s ease}.address,.port{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:clamp(17px,2.5vw,25px);line-height:1.2;font-weight:500;letter-spacing:-.03em}.java .address{border-color:#39784b}.java .address:hover{border-color:#43b765}.bedrock-details{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}.bedrock .address,.bedrock .port{border-color:#3979b8}.bedrock .address:hover,.bedrock .port:hover{border-color:#55aaff}.port{margin:0}.launch{margin:18px auto 0;display:flex;width:max-content;font-size:16px;font-weight:650;letter-spacing:.01em;border:1px solid #369bff;background:#125da8;color:#fff;box-shadow:0 0 14px #168bff77,0 0 30px #168bff44}.launch:hover{border-color:#8acaff;background:#0878d1;box-shadow:0 0 18px #168bffbb,0 0 40px #168bff66}.copy-unit:focus-visible,.launch:focus-visible{outline:2px solid #c6a96a;outline-offset:4px}#toast{position:fixed;top:20px;right:20px;padding:12px 18px;border:1px solid var(--border);border-radius:9px;background:#303030;color:var(--text);box-shadow:0 8px 30px #0004;opacity:0;transform:translateY(-8px);pointer-events:none;transition:opacity .18s ease,transform .18s ease}#toast.show{opacity:1;transform:translateY(0)}@media(max-width:560px){.servers{grid-template-columns:1fr;gap:48px}.bedrock-details{gap:8px}.copy-unit{padding:10px 12px}.address,.port{font-size:clamp(15px,4vw,21px)}h2{font-size:48px!important}}@media(prefers-reduced-motion:reduce){#toast,.copy-unit,.launch{transition:none}}
+:root{color-scheme:dark;--bg:#252525;--text:#f2f2f2;--muted:#a3a3a3;--border:#444}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;height:100%;overflow:hidden}
+body{min-height:100vh;height:100vh;background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;padding:24px;overflow:hidden}
+main{width:100%;height:calc(100vh - 48px);min-height:0;margin:0 auto;display:flex;align-items:center;justify-content:center}
+ .servers{width:min(100%,1100px);margin:0 auto;}
+[hidden]{display:none!important}
+.servers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(60px,10vw,140px);text-align:center}
+h2{font-size:clamp(42px,6vw,64px);font-weight:500;margin:0 0 24px}
+.java h2{color:#ffd43b}.bedrock h2{color:#55aaff}
+.copy-unit,.launch{display:inline-flex;align-items:center;justify-content:center;min-height:54px;padding:12px 16px;border-radius:9px;border:1px solid #505050;background:#303030;color:var(--text);font:inherit;text-decoration:none;cursor:pointer}
+.address,.port{font-family:ui-monospace,Menlo,monospace;font-size:clamp(16px,2.5vw,23px)}
+.bedrock-details{display:flex;flex-direction:column;align-items:center;gap:10px}
+.bedrock .address,.bedrock .port{border-color:#3979b8}
+.launch{margin:18px auto 0;display:flex;width:max-content;background:#125da8;color:#fff;border-color:#369bff;box-shadow:0 0 14px #168bff77;font-weight:650}
+.launch:hover{background:#0878d1;box-shadow:0 0 20px #168bffbb}
+#toast{position:fixed;top:20px;right:20px;padding:12px 18px;border:1px solid var(--border);border-radius:9px;background:#303030;opacity:0;pointer-events:none;z-index:20}
+#toast.show{opacity:1}
+.apply-fab{position:fixed;left:24px;bottom:24px;width:62px;height:62px;border:1px solid #369bff;border-radius:50%;background:#125da8;color:#fff;font-size:35px;line-height:1;cursor:pointer;box-shadow:0 0 18px #168bff66;transition:transform .2s,box-shadow .2s;z-index:30}
+body.form-open .apply-fab{visibility:hidden;pointer-events:none}
+.apply-fab:hover{transform:scale(1.08);box-shadow:0 0 25px #168bff99}
+.apply-overlay{position:fixed;inset:0;display:flex;align-items:flex-end;justify-content:flex-start;padding:24px;background:#0008;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .25s,visibility .25s;z-index:25}
+.apply-overlay.open{opacity:1;visibility:visible;pointer-events:auto}
+.apply-panel{position:relative;width:min(440px,100%);max-height:calc(100vh - 48px);overflow:auto;padding:30px;border:1px solid #4b4b4b;border-radius:18px;background:#2b2b2b;box-shadow:0 18px 60px #0008;transform:translateY(35px) scale(.96);transform-origin:bottom left;opacity:0;transition:transform .32s cubic-bezier(.2,.8,.2,1),opacity .25s}
+.apply-overlay.open .apply-panel{transform:translateY(0) scale(1);opacity:1}
+.apply-panel h1{font-size:30px;font-weight:550;margin:0 0 8px}
+.apply-panel .intro{color:#aaa;margin:0 0 24px}
+.apply-close{position:absolute;right:14px;top:12px;width:34px;height:34px;border:0;border-radius:50%;background:#3b3b3b;color:#ddd;font-size:25px;cursor:pointer}
+.application-form{display:grid;gap:16px}
+.application-form label{display:grid;gap:8px;color:#ddd;font-size:14px}
+.application-form input,.application-form textarea,.application-form select{width:100%;padding:12px;border:1px solid #505050;border-radius:8px;background:#202020;color:#f2f2f2;font:inherit}
+.application-form button{border:1px solid #369bff;border-radius:8px;padding:13px;background:#125da8;color:white;font:inherit;font-weight:650;cursor:pointer}
+.application-form button:hover{background:#0878d1}
+.optional{color:#999;font-weight:400}
+@media(max-width:560px){.servers{grid-template-columns:1fr;gap:48px}h2{font-size:46px}.apply-fab{left:18px;bottom:18px}.apply-overlay{padding:12px}.apply-panel{max-height:calc(100vh - 24px);padding:24px}}
+@media(prefers-reduced-motion:reduce){.apply-panel,.apply-overlay,.apply-fab{transition:none}}
+
+.back-argonplat{position:fixed;top:18px;right:20px;z-index:10;padding:10px 14px;border:1px solid #505050;border-radius:9px;background:#303030;color:#ddd;font-size:14px;text-decoration:none;transition:background .2s,border-color .2s}\n.back-argonplat:hover{background:#3b3b3b;border-color:#666}\n
+.useless-button{position:fixed;top:20px;left:20px;z-index:10;width:48px;height:48px;display:flex;align-items:center;justify-content:center;border:1px solid #555;border-radius:50%;background:#303030;color:#f2f2f2;font-size:24px;font-weight:700;text-decoration:none;box-shadow:0 0 0 rgba(0,0,0,0);transition:transform .22s ease,background .22s ease,border-color .22s ease,box-shadow .22s ease,color .22s ease}\n.useless-button:hover{transform:rotate(12deg) scale(1.12);background:#125da8;border-color:#369bff;color:#fff;box-shadow:0 0 20px #168bff88}\n.useless-button:active{transform:scale(.96)}\n
+
+/* Deep-space background with continuously drifting, twinkling stars */
+:root{--bg:#000}
+body{background:#000;isolation:isolate}
+/* Lightweight animated starfield: one oversized repeating layer.
+   The movement ends after exactly one tile, so the loop is seamless.
+   Only transform and opacity animate; there are no filters or per-star elements. */
+body::before{
+  content:"";
+  position:fixed;
+  inset:-320px;
+  z-index:-1;
+  pointer-events:none;
+  background-repeat:repeat;
+  background-size:320px 320px;
+  background-image:
+    radial-gradient(1px 1px at 22px 34px,#ffffff 98%,transparent),
+    radial-gradient(1px 1px at 91px 82px,#dbeafe 98%,transparent),
+    radial-gradient(1.5px 1.5px at 176px 28px,#ffffff 98%,transparent),
+    radial-gradient(1px 1px at 267px 104px,#ffffffaa 98%,transparent),
+    radial-gradient(1px 1px at 44px 193px,#ffffff 98%,transparent),
+    radial-gradient(1.5px 1.5px at 143px 156px,#ffffff 98%,transparent),
+    radial-gradient(1px 1px at 244px 219px,#bfdbfe 98%,transparent),
+    radial-gradient(1px 1px at 91px 282px,#ffffff 98%,transparent),
+    radial-gradient(1.5px 1.5px at 297px 294px,#ffffff 98%,transparent);
+  opacity:.62;
+  animation:stars-drift 120s linear infinite;
+}
+@keyframes stars-drift{
+  0%,100%{transform:translate3d(0,0,0);opacity:.55}
+  50%{transform:translate3d(160px,160px,0);opacity:.78}
+}
+@media(prefers-reduced-motion:reduce){
+  body::before{animation:none}
+}
+
+/* Java address copy button: clipboard icon slides over, then expands on hover */
+.java-copy{position:relative;width:250px;max-width:100%;height:58px;padding:0 48px 0 18px;overflow:hidden;border-radius:18px!important;border:1px solid #8a6d17;background:#29230e;color:#ffe16a;justify-content:flex-start;transition:background .3s,border-color .3s}
+.java-copy__text{display:block;white-space:nowrap;transition:opacity .2s,color .2s}
+.java-copy__icon{position:absolute;right:0;top:0;height:100%;width:48px;display:flex;align-items:center;justify-content:center;background:#b58b16;color:#fff;border-left:1px solid #8a6d17;border-radius:0 17px 17px 0;transition:background .2s}
+.java-copy:hover{background:#211b08;border-color:#b58b16}
+.java-copy:hover .java-copy__text{opacity:0}
+.java-copy:hover .java-copy__icon{width:48px;border-left:1px solid #8a6d17;border-radius:0 17px 17px 0;background:#a77f10}
+.java-copy:hover::after{content:"Copy to clipboard";position:absolute;inset:0 48px 0 0;display:flex;align-items:center;justify-content:center;color:#fff;font:600 15px Inter,system-ui,sans-serif;letter-spacing:.01em}
+.bedrock-copy{position:relative;width:250px;max-width:100%;height:54px;padding:0 16px;overflow:hidden;border-radius:16px!important;border:1px solid #2879c7;background:#071c32;color:#8ccaff;justify-content:flex-start;transition:background .25s,border-color .25s}
+.copy-label{white-space:nowrap;font-size:clamp(13px,2vw,17px);transition:opacity .2s}
+.copy-icon{position:absolute;right:0;top:0;height:100%;width:48px;display:flex;align-items:center;justify-content:center;background:#176bb4;color:#fff;border-radius:0 15px 15px 0;transition:width .28s,background .2s}
+.bedrock-copy:hover{background:#06172a;border-color:#3998ed}
+.bedrock-copy:hover .copy-label{opacity:0}
+.bedrock-copy:hover .copy-icon{width:48px;background:#125da8}
+.bedrock-copy:hover::after{content:"Copy to clipboard";position:absolute;inset:0 48px 0 0;display:flex;align-items:center;justify-content:center;color:#fff;font:600 14px Inter,system-ui,sans-serif}
+.java-copy.copied,.bedrock-copy.copied{background:#092719!important;border-color:#35c875!important;color:#9af0bb!important}
+.java-copy.copied .java-copy__icon,.bedrock-copy.copied .copy-icon{background:#159447!important}
+.java-copy.copied:hover::after,.bedrock-copy.copied:hover::after{content:"Copied!"}
+.java-copy.copied:hover .java-copy__icon,.bedrock-copy.copied:hover .copy-icon{background:#159447!important}
+.java-copy:active .java-copy__icon{background:#88670c}
+
+/* Keep the copy icon fixed; fit the address text without collision */
+.java-copy .java-copy__text{font-size:clamp(14px,2.1vw,19px);letter-spacing:-.025em;white-space:nowrap}
+.java-copy:hover .java-copy__text{opacity:0}
+.java-copy.copied:hover .java-copy__icon{background:#159447!important;border-left-color:#159447}
+
+/* Java launch button matches Bedrock button, in Java gold */
+.java-launch{background:#a77f10;color:#fff;border-color:#d6aa25;box-shadow:0 0 14px #ffd43b44}
+.java-launch:hover{background:#c09516;box-shadow:0 0 20px #ffd43b77}
+
+/* Small blue Java port info tooltip */
+.java h2{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:24px}
+.info-tip{position:relative;display:inline-flex;align-items:center;justify-content:center;flex:0 0 17px;width:17px;height:17px;border:1px solid #2498ff;border-radius:50%;background:#0878d1;color:#fff;font:700 11px/1 system-ui,sans-serif;cursor:help;vertical-align:middle}
+.info-tip::after{content:attr(data-tooltip);position:absolute;left:50%;top:calc(100% + 9px);transform:translate(-50%,-4px);width:max-content;max-width:220px;padding:8px 11px;border:1px solid #2587d7;border-radius:8px;background:#09213a;color:#d7edff;font:500 12px/1.35 Inter,system-ui,sans-serif;white-space:normal;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .15s,transform .15s;z-index:40}
+.info-tip:hover::after,.info-tip:focus-visible::after{opacity:1;visibility:visible;transform:translate(-50%,0)}
+
+/* Match Java address/port vertical spacing to Bedrock */
+.java .java-copy+.java-copy{margin-top:8px}
+.java .java-launch{margin-top:18px}
+
+/* Java port is neutral gray; hover explains that Java needs no port */
+.java .java-copy.port{background:#252525;border-color:#555;color:#c7c7c7}
+.java .java-copy.port .java-copy__icon{background:#4a4a4a;border-left-color:#555;color:#fff}
+.java .java-copy.port:hover{background:#202020;border-color:#777}
+.java .java-copy.port:hover .java-copy__icon{background:#555;border-left-color:#555}
+.java .java-copy.port:hover::after{content:"you dont need the port for java!";font-size:12px;white-space:nowrap}
+.java .java-copy.port.copied{background:#092719!important;border-color:#35c875!important;color:#9af0bb!important}
+.java .java-copy.port.copied .java-copy__icon{background:#159447!important;border-left-color:#159447!important}
+
+/* Java port is neutral gray; tooltip appears over the port on hover */
+.java .java-copy.port{background:#252525;color:#d2d2d2;border-color:#555}
+.java .java-copy.port .java-copy__icon{background:#484848;border-left-color:#555}
+.java .java-copy.port:hover{background:#202020;border-color:#777}
+.java .java-copy.port:hover .java-copy__icon{background:#484848;border-left-color:#555}
+.java .java-copy.port.copied{background:#092719!important;border-color:#35c875!important;color:#9af0bb!important}
+.java .java-copy.port.copied .java-copy__icon{background:#159447!important;border-left-color:#159447!important}
+.port-info{position:absolute;left:50%;bottom:calc(100% + 9px);transform:translate(-50%,4px);width:max-content;max-width:230px;padding:8px 11px;border:1px solid #555;border-radius:8px;background:#292929;color:#eee;font:500 12px/1.35 Inter,system-ui,sans-serif;white-space:normal;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .15s,transform .15s;z-index:40}
+.java .java-copy.port:hover .port-info,.java .java-copy.port:focus-visible .port-info{opacity:1;visibility:visible;transform:translate(-50%,0)}
+
+/* Make Java port button more translucent */
+.java .java-copy.port{background:rgba(100,100,100,.22);border-color:rgba(180,180,180,.35)}
+.java .java-copy.port .java-copy__icon{background:rgba(130,130,130,.28);border-left-color:rgba(180,180,180,.3)}
+.java .java-copy.port:hover{background:rgba(110,110,110,.3);border-color:rgba(200,200,200,.5)}
+.java .java-copy.port:hover .java-copy__icon{background:rgba(145,145,145,.35)}
+
+/* Performance tuning: smaller composited layers and minimal hover effects */
+.apply-panel{box-shadow:0 12px 32px #0007}
+.apply-fab{box-shadow:0 0 12px #168bff44}
+.launch{box-shadow:0 0 8px #168bff44}
+.java-launch{box-shadow:0 0 8px #ffd43b33}
+
+/* Extra translucent Java port button */
+.java .java-copy.port{background:rgba(95,95,95,.12);border-color:rgba(180,180,180,.22);color:rgba(230,230,230,.8)}
+.java .java-copy.port .java-copy__icon{background:rgba(125,125,125,.16);border-left-color:rgba(180,180,180,.18)}
+.java .java-copy.port:hover{background:rgba(110,110,110,.2);border-color:rgba(200,200,200,.32)}
+.java .java-copy.port:hover .java-copy__icon{background:rgba(145,145,145,.24)}
+
+
+/* Java port: very transparent by default; fully opaque only on hover */
+.java .java-copy.port{background:rgba(95,95,95,.06);border-color:rgba(180,180,180,.12);color:rgba(230,230,230,.55)}
+.java .java-copy.port .java-copy__icon{background:rgba(125,125,125,.06);border-left-color:rgba(180,180,180,.1);color:rgba(255,255,255,.6)}
+.java .java-copy.port:hover,.java .java-copy.port:focus-visible{background:rgba(95,95,95,1);border-color:rgba(200,200,200,1);color:#fff}
+.java .java-copy.port:hover .java-copy__icon,.java .java-copy.port:focus-visible .java-copy__icon{background:rgba(125,125,125,1);border-left-color:rgba(200,200,200,1);color:#fff}
+
+/* Keep optional Discord note inline with its label */
+.application-form label:has(.optional){display:block}
+.application-form label .optional{display:inline;margin-left:6px}
+
+.application-status{margin:0;font-size:13px;line-height:1.4;color:#bdbdbd}
+.application-status.success{color:#78e6a4}
+.application-status.error{color:#ff8585}
+.application-form button:disabled{opacity:.65;cursor:wait}
