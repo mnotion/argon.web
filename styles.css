@@ -155,3 +155,7 @@ body::before{
 .java .java-copy.port .java-copy__icon{background:rgba(125,125,125,.06);border-left-color:rgba(180,180,180,.1);color:rgba(255,255,255,.6)}
 .java .java-copy.port:hover,.java .java-copy.port:focus-visible{background:rgba(95,95,95,1);border-color:rgba(200,200,200,1);color:#fff}
 .java .java-copy.port:hover .java-copy__icon,.java .java-copy.port:focus-visible .java-copy__icon{background:rgba(125,125,125,1);border-left-color:rgba(200,200,200,1);color:#fff}
+
+/* Keep optional Discord note inline with its label */
+.application-form label:has(.optional){display:block}
+.application-form label .optional{display:inline;margin-left:6px}
