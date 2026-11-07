@@ -300,3 +300,21 @@ a,button,[role="button"],input,textarea,select{-webkit-tap-highlight-color:trans
 @media(max-width:560px){
  .apply-card-wrap .apply-help{left:18px!important;right:auto!important;top:18px!important}
 }
+
+/* Mobile fixed application launcher and denser all-over starfield */
+@media(max-width:560px){
+ .apply-fab{position:fixed!important;left:14px!important;bottom:14px!important;right:auto!important;z-index:9999!important}
+}
+body::before{
+ background-size:180px 180px!important;
+ background-image:
+  radial-gradient(1px 1px at 12px 18px,#fff 98%,transparent),
+  radial-gradient(1px 1px at 47px 61px,#dbeafe 98%,transparent),
+  radial-gradient(1.5px 1.5px at 91px 22px,#fff 98%,transparent),
+  radial-gradient(1px 1px at 151px 76px,#ffffffbb 98%,transparent),
+  radial-gradient(1px 1px at 28px 113px,#fff 98%,transparent),
+  radial-gradient(1.5px 1.5px at 79px 94px,#fff 98%,transparent),
+  radial-gradient(1px 1px at 133px 142px,#bfdbfe 98%,transparent),
+  radial-gradient(1px 1px at 58px 166px,#fff 98%,transparent),
+  radial-gradient(1.5px 1.5px at 169px 171px,#fff 98%,transparent)!important;
+}
