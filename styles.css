@@ -264,3 +264,10 @@ body{animation:argonPageEnter .55s ease-out both}
   .server{width:100%!important}
   .apply-fab{position:fixed!important;left:18px!important;bottom:18px!important;z-index:1000!important}
 }
+
+/* Mobile application: place the info circle inside the card's top-right corner */
+@media(max-width:560px){
+  .apply-card-wrap .apply-help{top:18px!important;right:18px!important;width:38px!important;height:38px!important;z-index:110!important}
+  .apply-card-wrap .apply-panel{padding-top:58px!important}
+  .apply-card-wrap .apply-help-tip{right:0!important;top:44px!important;width:min(300px,calc(100vw - 72px))!important}
+}
