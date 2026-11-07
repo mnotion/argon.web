@@ -318,3 +318,11 @@ body::before{
   radial-gradient(1px 1px at 58px 166px,#fff 98%,transparent),
   radial-gradient(1.5px 1.5px at 169px 171px,#fff 98%,transparent)!important;
 }
+
+/* Mobile: disable page scrolling entirely */
+@media(max-width:560px){
+ html,body{height:100%!important;min-height:100%!important;overflow:hidden!important;overscroll-behavior:none!important}
+ body{height:100dvh!important;min-height:0!important}
+ main{height:calc(100dvh - 90px)!important;overflow:hidden!important}
+ .servers{padding-bottom:0!important}
+}
