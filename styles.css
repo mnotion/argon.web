@@ -203,3 +203,6 @@ body::before{
 .apply-overlay .application-layout{grid-template-columns:minmax(0,1fr)!important;gap:16px!important}
 .apply-overlay .application-content{max-width:none!important;width:100%!important}
 .apply-overlay .application-info{width:100%!important}
+
+/* Make whitelist modal 25% shorter */
+.apply-overlay .apply-panel{max-height:75vh!important;overflow-y:auto!important}
