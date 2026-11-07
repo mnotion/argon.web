@@ -15,18 +15,19 @@
     .servers { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:clamp(70px,14vw,180px); align-items:start; }
     .server { padding:0; border:0; background:transparent; min-width:0; }
     h2 { margin:0 0 14px; color:var(--muted); font-size:13px; font-weight:600; letter-spacing:.14em; text-transform:lowercase; }
-    .copy-unit { display:inline-flex; align-items:center; justify-content:center; min-height:52px; max-width:100%; padding:10px 16px; border:1px solid #3a3c35; border-radius:8px; background:#171914; color:var(--text); font:inherit; cursor:pointer; overflow-wrap:anywhere; transition:box-shadow .2s ease,border-color .2s ease,color .2s ease; }
+    .copy-unit,.launch { display:inline-flex; align-items:center; justify-content:center; min-height:52px; max-width:100%; padding:10px 16px; border:1px solid #3a3c35; border-radius:8px; background:#171914; color:var(--text); font:inherit; cursor:pointer; overflow-wrap:anywhere; text-decoration:none; transition:box-shadow .2s ease,border-color .2s ease,color .2s ease; }
     .address,.port { font-family:hello,ui-monospace,SFMono-Regular,Menlo,monospace; font-size:clamp(17px,3vw,25px); line-height:1.2; font-weight:500; letter-spacing:-.03em; }
     .port { margin-top:12px; }
     .java .address { border-color:#285c38; box-shadow:0 0 12px #32c65a18,inset 0 0 10px #32c65a08; }
     .java .address:hover { border-color:#43b765; box-shadow:0 0 18px #32c65a30; }
-    .bedrock .address,.bedrock .port { border-color:#642e32; box-shadow:0 0 12px #ef454518,inset 0 0 10px #ef454508; }
-    .bedrock .address:hover,.bedrock .port:hover { border-color:#d64a52; box-shadow:0 0 18px #ef454530; }
-    .copy-unit:focus-visible { outline:2px solid #c6a96a; outline-offset:4px; }
+    .bedrock .address,.bedrock .port,.bedrock .launch { border-color:#642e32; box-shadow:0 0 12px #ef454518,inset 0 0 10px #ef454508; }
+    .bedrock .address:hover,.bedrock .port:hover,.bedrock .launch:hover { border-color:#d64a52; box-shadow:0 0 18px #ef454530; }
+    .launch { margin-top:12px; font-size:14px; font-weight:600; letter-spacing:.02em; }
+    .copy-unit:focus-visible,.launch:focus-visible { outline:2px solid #c6a96a; outline-offset:4px; }
     #toast { position:fixed; top:20px; right:20px; padding:12px 18px; border:1px solid var(--border); border-radius:9px; background:#191b17; color:var(--text); box-shadow:0 8px 30px #0005; opacity:0; transform:translateY(-8px); pointer-events:none; transition:opacity .18s ease,transform .18s ease; }
     #toast.show { opacity:1; transform:translateY(0); }
     @media(max-width:560px) { .servers { grid-template-columns:1fr; gap:28px; } main { width:100%; } }
-    @media(prefers-reduced-motion:reduce) { #toast,.copy-unit { transition:none; } }
+    @media(prefers-reduced-motion:reduce) { #toast,.copy-unit,.launch { transition:none; } }
   </style>
 </head>
 <body>
@@ -40,6 +41,7 @@
       <div class="server bedrock">
         <h2>bedrock edition</h2>
         <button class="copy-unit address" type="button" data-copy="argon.serv.lol" aria-label="copy bedrock server address">argon.serv.lol</button>
+        <a class="launch" href="minecraft://?addExternalServer=argon,argon.serv.lol:3045">open with bedrock</a>
         <button class="copy-unit port" type="button" data-copy="3045" aria-label="copy bedrock port">Port: 3045</button>
       </div>
     </section>
