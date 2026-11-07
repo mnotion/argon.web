@@ -281,3 +281,18 @@ a,button,[role="button"],input,textarea,select{-webkit-tap-highlight-color:trans
  main{height:auto!important;overflow:visible!important}
  .servers{padding-bottom:32px!important}
 }
+
+/* Mobile compact layout: fit server sections more comfortably on phone screens */
+@media(max-width:560px){
+ body{padding:14px 14px 76px!important}
+ .servers{gap:42px!important}
+ h2{font-size:38px!important;margin-bottom:16px!important}
+ .java-copy,.bedrock-copy{height:48px!important;border-radius:14px!important}
+ .java-copy{width:min(100%,270px)!important}
+ .bedrock-details{gap:8px!important}
+ .bedrock-copy{width:min(100%,270px)!important}
+ .address,.port{font-size:16px!important}
+ .java-copy__text,.copy-label{font-size:16px!important}
+ .launch{margin-top:12px!important;min-height:48px!important;padding:10px 14px!important;font-size:16px!important}
+ .apply-fab{width:54px!important;height:54px!important;font-size:30px!important;left:14px!important;bottom:14px!important}
+}
