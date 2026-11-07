@@ -33,3 +33,5 @@ body.form-open .apply-fab{visibility:hidden;pointer-events:none}
 .optional{color:#999;font-weight:400}
 @media(max-width:560px){.servers{grid-template-columns:1fr;gap:48px}h2{font-size:46px}.apply-fab{left:18px;bottom:18px}.apply-overlay{padding:12px}.apply-panel{max-height:calc(100vh - 24px);padding:24px}}
 @media(prefers-reduced-motion:reduce){.apply-panel,.apply-overlay,.apply-fab{transition:none}}
+
+.back-argonplat{position:fixed;top:18px;right:20px;z-index:10;padding:10px 14px;border:1px solid #505050;border-radius:9px;background:#303030;color:#ddd;font-size:14px;text-decoration:none;transition:background .2s,border-color .2s}\n.back-argonplat:hover{background:#3b3b3b;border-color:#666}\n
