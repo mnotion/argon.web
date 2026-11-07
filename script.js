@@ -133,19 +133,49 @@ if(applicationForm){
 }
 
 
-// Live Argon player count (mcstatus.io, cached status response)
+// Live Argon status and sample player list (mcstatus.io cache applies).
+const playerCount=document.getElementById('player-count');
+const playersPanel=document.getElementById('players-panel');
+const playersList=document.getElementById('players-list');
+const playersClose=document.getElementById('players-close');
+let playerNames=[];
+function setPlayersOpen(open){
+  playersPanel.classList.toggle('open',open);
+  playersPanel.setAttribute('aria-hidden',String(!open));
+  playerCount.setAttribute('aria-expanded',String(open));
+}
+playerCount.addEventListener('click',()=>setPlayersOpen(!playersPanel.classList.contains('open')));
+playersClose.addEventListener('click',()=>setPlayersOpen(false));
+document.addEventListener('keydown',event=>{if(event.key==='Escape')setPlayersOpen(false)});
+document.addEventListener('click',event=>{
+  if(playersPanel.classList.contains('open')&&!playersPanel.contains(event.target)&&event.target!==playerCount)setPlayersOpen(false);
+});
+function renderPlayers(list){
+  playersList.replaceChildren();
+  if(!list.length){
+    const empty=document.createElement('p');empty.className='players-empty';
+    empty.textContent='Player names are not currently provided by the server.';playersList.append(empty);return;
+  }
+  list.forEach(player=>{
+    const row=document.createElement('div');row.className='player-row';
+    const avatar=document.createElement('img');avatar.className='player-avatar';avatar.alt='';avatar.width=32;avatar.height=32;avatar.loading='lazy';
+    avatar.src='https://mc-heads.net/avatar/'+encodeURIComponent(player.uuid||player.name_clean||player.name_raw||'Steve')+'/32';
+    const name=document.createElement('span');name.className='player-name';name.textContent=player.name_clean||player.name_raw||'Unknown';
+    row.append(avatar,name);playersList.append(row);
+  });
+}
 async function refreshPlayerCount(){
-  const label=document.getElementById('player-count');
   try{
     const response=await fetch('https://api.mcstatus.io/v2/status/java/argon.serv.lol:10134');
-    if(!response.ok) throw new Error('Status unavailable');
+    if(!response.ok)throw new Error('Status unavailable');
     const data=await response.json();
-    label.textContent=data.online && data.players ? data.players.online+' players online' : 'Server offline';
-    label.classList.toggle('offline',!data.online);
+    playerCount.textContent=data.online&&data.players?data.players.online+' players online':'Server offline';
+    playerCount.classList.toggle('offline',!data.online);
+    playerNames=data.online&&data.players&&Array.isArray(data.players.list)?data.players.list:[];
+    renderPlayers(playerNames);
   }catch{
-    label.textContent='Player count unavailable';
-    label.classList.add('offline');
+    playerCount.textContent='Player count unavailable';playerCount.classList.add('offline');
+    renderPlayers([]);
   }
 }
-refreshPlayerCount();
-setInterval(refreshPlayerCount,60000);
+refreshPlayerCount();setInterval(refreshPlayerCount,60000);
