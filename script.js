@@ -71,12 +71,38 @@ closeApply.addEventListener('click',()=>setApplyOpen(false));
 applyOverlay.addEventListener('click',event=>{if(event.target===applyOverlay)setApplyOpen(false)});
 document.addEventListener('keydown',event=>{if(event.key==='Escape'&&applyOverlay.classList.contains('open'))setApplyOpen(false)});
 
-const identitySelect=document.getElementById('identity-confirmation');
-const identityOtherWrap=document.getElementById('identity-other-wrap');
-const identityOther=document.getElementById('identity-other');
-identitySelect.addEventListener('change',()=>{
- const isOther=identitySelect.value==='Other';
- identityOtherWrap.hidden=!isOther;
- identityOther.required=isOther;
- if(!isOther)identityOther.value='';
-});
+
+// Whitelist form: submit through FormSubmit AJAX and report its actual response.
+const applicationForm=document.querySelector('.application-form');
+if(applicationForm){
+ const submitButton=applicationForm.querySelector('button[type="submit"]');
+ const status=document.createElement('p');
+ status.className='application-status';
+ status.setAttribute('role','status');
+ status.setAttribute('aria-live','polite');
+ applicationForm.append(status);
+ applicationForm.addEventListener('submit',async event=>{
+   event.preventDefault();
+   if(!applicationForm.reportValidity()) return;
+   const originalLabel=submitButton.textContent;
+   submitButton.disabled=true;
+   submitButton.textContent='sending...';
+   status.textContent='sending your application...';
+   status.classList.remove('success','error');
+   try{
+     const endpoint=applicationForm.action.replace('https://formsubmit.co/','https://formsubmit.co/ajax/');
+     const response=await fetch(endpoint,{method:'POST',body:new FormData(applicationForm),headers:{Accept:'application/json'}});
+     const result=await response.json();
+     if(!response.ok||result.success===false||result.success==='false') throw new Error(result.message||'Submission failed');
+     status.textContent='application sent! check your email for any follow-up.';
+     status.classList.add('success');
+     applicationForm.reset();
+   }catch(error){
+     status.textContent='failed to send. check your connection and try again.';
+     status.classList.add('error');
+   }finally{
+     submitButton.disabled=false;
+     submitButton.textContent=originalLabel;
+   }
+ });
+}
