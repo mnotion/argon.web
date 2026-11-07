@@ -206,3 +206,6 @@ body::before{
 
 /* Make whitelist modal 25% shorter */
 .apply-overlay .apply-panel{max-height:75vh!important;overflow-y:auto!important}
+
+/* Correct modal width: reduce current 560px by 25%; leave height untouched */
+.apply-overlay .apply-panel{width:min(420px,calc(100vw - 28px))!important;max-width:420px!important}
