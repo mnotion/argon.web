@@ -253,3 +253,14 @@ body{animation:argonPageEnter .55s ease-out both}
 .apply-help::after{right:-2px;bottom:0;--sx:26px;--sy:24px;animation-delay:.12s}
 @keyframes argonSpark{0%{opacity:0;transform:scale(.2) translate(0,0)}15%{opacity:1}100%{opacity:0;transform:scale(.8) translate(var(--sx),var(--sy))}}
 @media(prefers-reduced-motion:reduce){body{animation:none}.apply-help,.apply-help::before,.apply-help::after{animation:none!important}}
+
+
+/* Mobile: let the server list scroll naturally and keep the application button viewport-fixed */
+@media(max-width:560px){
+  html,body{height:auto!important;min-height:100%!important;overflow-x:hidden!important;overflow-y:auto!important}
+  body{height:auto!important;min-height:100svh!important;padding:24px 18px 100px!important}
+  main{height:auto!important;min-height:0!important;display:block!important}
+  .servers{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:100px!important;width:100%!important}
+  .server{width:100%!important}
+  .apply-fab{position:fixed!important;left:18px!important;bottom:18px!important;z-index:1000!important}
+}
