@@ -83,3 +83,7 @@ animation:starDrift 65s linear infinite reverse,starTwinkle 4s ease-in-out infin
 .java-copy .java-copy__text{font-size:clamp(14px,2.1vw,19px);letter-spacing:-.025em;white-space:nowrap}
 .java-copy:hover .java-copy__text{opacity:0}
 .java-copy.copied:hover .java-copy__icon{background:#159447!important;border-left-color:#159447}
+
+/* Java launch button matches Bedrock button, in Java gold */
+.java-launch{background:#a77f10;color:#fff;border-color:#d6aa25;box-shadow:0 0 14px #ffd43b44}
+.java-launch:hover{background:#c09516;box-shadow:0 0 20px #ffd43b77}
