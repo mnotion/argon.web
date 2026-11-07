@@ -36,3 +36,26 @@ body.form-open .apply-fab{visibility:hidden;pointer-events:none}
 
 .back-argonplat{position:fixed;top:18px;right:20px;z-index:10;padding:10px 14px;border:1px solid #505050;border-radius:9px;background:#303030;color:#ddd;font-size:14px;text-decoration:none;transition:background .2s,border-color .2s}\n.back-argonplat:hover{background:#3b3b3b;border-color:#666}\n
 .useless-button{position:fixed;top:20px;left:20px;z-index:10;width:48px;height:48px;display:flex;align-items:center;justify-content:center;border:1px solid #555;border-radius:50%;background:#303030;color:#f2f2f2;font-size:24px;font-weight:700;text-decoration:none;box-shadow:0 0 0 rgba(0,0,0,0);transition:transform .22s ease,background .22s ease,border-color .22s ease,box-shadow .22s ease,color .22s ease}\n.useless-button:hover{transform:rotate(12deg) scale(1.12);background:#125da8;border-color:#369bff;color:#fff;box-shadow:0 0 20px #168bff88}\n.useless-button:active{transform:scale(.96)}\n
+/* Rotating Earth beneath the server addresses */
+.earth-scene{position:relative;width:100%;display:flex;justify-content:center;align-items:center;margin:42px auto 0;height:290px;overflow:visible}
+.section-banner{height:250px;width:250px;position:relative;border-radius:50%;background:
+radial-gradient(ellipse at 28% 28%,#9ce7ff 0,#277fc0 22%,#06416f 56%,#010914 78%);
+box-shadow:0 0 20px #ffffff33,-5px 0 8px #c3f4ff inset,15px 2px 25px #000 inset,-24px -2px 34px #c3f4ff99 inset,150px 0 38px #000000aa inset;
+overflow:hidden;animation:earthRotate 30s linear infinite}
+.section-banner:before{content:"";position:absolute;inset:-8%;border-radius:50%;background:
+radial-gradient(ellipse at 34% 28%,#75c66b 0 9%,transparent 10%),
+radial-gradient(ellipse at 43% 43%,#3f9b53 0 13%,transparent 14%),
+radial-gradient(ellipse at 65% 25%,#75c66b 0 8%,transparent 9%),
+radial-gradient(ellipse at 72% 60%,#4eaa62 0 12%,transparent 13%),
+radial-gradient(ellipse at 25% 68%,#3d9654 0 11%,transparent 12%);
+filter:blur(1px);opacity:.9}
+@keyframes earthRotate{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.earth-stars{position:absolute;inset:0;pointer-events:none;color:#fff}
+.earth-stars i{position:absolute;font-style:normal;font-size:13px;animation:twinkling 3s infinite}
+#star-1{left:8%;top:12%}#star-2{left:18%;top:72%;animation-duration:2s}
+#star-3{right:12%;top:30%;animation-duration:4s}#star-4{right:22%;bottom:5%;animation-duration:3s}
+#star-5{left:30%;bottom:0;animation-duration:1.5s}#star-6{right:35%;top:0;animation-duration:4s}
+#star-7{right:5%;top:65%;animation-duration:2s}
+@keyframes twinkling{0%,100%{opacity:.15}50%{opacity:1}}
+@media(max-width:560px){.earth-scene{margin-top:28px;height:270px}.section-banner{width:220px;height:220px}}
+@media(prefers-reduced-motion:reduce){.section-banner,.earth-stars i{animation:none}}
