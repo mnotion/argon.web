@@ -3,79 +3,59 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#10110f">
+  <meta name="theme-color" content="#ffffff">
+
   <meta name="description" content="Connect to the argon minecraft server on java or bedrock.">
   <title>argon — minecraft server</title>
-  <style>
-    :root { color-scheme:dark; --bg:#10110f; --text:#f3f3ed; --muted:#a0a398; --border:#303329; }
-    * { box-sizing:border-box; }
-    html,body { margin:0; min-height:100%; }
-    body { min-height:100vh; display:grid; place-items:center; padding:24px; background:var(--bg); color:var(--text); font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
-    main { width:min(100%,1100px); text-align:center; }
-    .servers { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:clamp(70px,14vw,180px); align-items:start; }
-    .server { padding:0; border:0; background:transparent; min-width:0; }
-    h2 { margin:0 0 22px; color:var(--text); font-size:clamp(34px,6vw,64px); line-height:1; font-weight:800; letter-spacing:-.05em; text-transform:lowercase; }
-    .copy-unit,.launch { display:inline-flex; align-items:center; justify-content:center; min-height:52px; max-width:100%; padding:10px 16px; border:1px solid #3a3c35; border-radius:8px; background:#171914; color:var(--text); font:inherit; cursor:pointer; overflow-wrap:anywhere; text-decoration:none; transition:box-shadow .2s ease,border-color .2s ease,color .2s ease; }
-    .address,.port { font-family:hello,ui-monospace,SFMono-Regular,Menlo,monospace; font-size:clamp(17px,3vw,25px); line-height:1.2; font-weight:500; letter-spacing:-.03em; }
-    .port { margin-top:0; }
-    .bedrock .details { display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap; }
-    .bedrock .launch { display:flex; width:max-content; margin:22px auto 0; color:#8fc8ff; border-color:#285a83; box-shadow:0 0 12px #3a9bff18,inset 0 0 10px #3a9bff08; }
-    .bedrock .launch:hover { border-color:#4a9fe8; box-shadow:0 0 18px #3a9bff30; }
-    .java .address { border-color:#285c38; box-shadow:0 0 12px #32c65a18,inset 0 0 10px #32c65a08; }
-    .java .address:hover { border-color:#43b765; box-shadow:0 0 18px #32c65a30; }
-    .bedrock .address,.bedrock .port,.bedrock .launch { border-color:#642e32; box-shadow:0 0 12px #ef454518,inset 0 0 10px #ef454508; }
-    .bedrock .address:hover,.bedrock .port:hover,.bedrock .launch:hover { border-color:#d64a52; box-shadow:0 0 18px #ef454530; }
-    .launch { margin-top:12px; font-size:14px; font-weight:600; letter-spacing:.02em; }
-    .copy-unit:focus-visible,.launch:focus-visible { outline:2px solid #c6a96a; outline-offset:4px; }
-    #toast { position:fixed; top:20px; right:20px; padding:12px 18px; border:1px solid var(--border); border-radius:9px; background:#191b17; color:var(--text); box-shadow:0 8px 30px #0005; opacity:0; transform:translateY(-8px); pointer-events:none; transition:opacity .18s ease,transform .18s ease; }
-    #toast.show { opacity:1; transform:translateY(0); }
-    @media(max-width:560px) { .servers { grid-template-columns:1fr; gap:28px; } main { width:100%; } }
-    @media(prefers-reduced-motion:reduce) { #toast,.copy-unit,.launch { transition:none; } }
-  </style>
+
+
+  
+  <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
+
+
   <div id="toast" role="status" aria-live="polite">copied!</div>
   <main>
+
     <section class="servers" aria-label="server addresses">
       <div class="server java">
-        <h2>java</h2>
-        <button class="copy-unit address" type="button" data-copy="argon.serv.lol" aria-label="copy java server address">argon.serv.lol</button>
+
+        <h2>java edition</h2>
+
+        <button class="copy-unit address" 
+        type="button" 
+        data-copy="argon.serv.lol" 
+        aria-label="copy java server address">
+        argon.serv.lol
+      </button>
       </div>
+
+
       <div class="server bedrock">
-        <h2>bedrock</h2>
-        <div class="details">
-          <button class="copy-unit address" type="button" data-copy="argon.serv.lol" aria-label="copy bedrock server address">argon.serv.lol</button>
-          <button class="copy-unit port" type="button" data-copy="3045" aria-label="copy bedrock port">Port: 3045</button>
-        </div>
-        <a class="launch" href="minecraft://?addExternalServer=argon,argon.serv.lol:3045">Open with bedrock</a>
+        <h2>bedrock edition</h2>
+
+
+        <button class="copy-unit address" 
+        type="button"
+         data-copy="argon.serv.lol" 
+         aria-label="copy bedrock server address">
+         argon.serv.lol
+        </button>
+
+        <a class="launch" 
+        href="minecraft://?addExternalServer=argon,argon.serv.lol:3045">
+        open with bedrock</a>
+        <button class="copy-unit port" type="button" data-copy="3045" aria-label="copy bedrock port">Port: 3045</button>
       </div>
+
     </section>
+
+
   </main>
-  <script>
-    const toast = document.getElementById('toast');
-    let toastTimer;
-    function showToast(message) {
-      toast.textContent = message;
-      toast.classList.add('show');
-      clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => toast.classList.remove('show'), 1800);
-    }
-    function fallbackCopy(text) {
-      const field = document.createElement('textarea');
-      field.value = text; field.setAttribute('readonly','');
-      field.style.position='fixed'; field.style.opacity='0';
-      document.body.appendChild(field); field.select(); field.setSelectionRange(0,field.value.length);
-      let success=false; try { success=document.execCommand('copy'); } catch {}
-      field.remove(); return success;
-    }
-    document.querySelectorAll('[data-copy]').forEach(button => {
-      button.addEventListener('click', async () => {
-        const text=button.dataset.copy; let success=false;
-        try { if(navigator.clipboard && window.isSecureContext){await navigator.clipboard.writeText(text);success=true;} } catch {}
-        if(!success) success=fallbackCopy(text);
-        showToast(success?'copied!':'copy failed — select and copy manually');
-      });
-    });
-  </script>
+
+  <script src="script.js" defer></script>
 </body>
+
 </html>
