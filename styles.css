@@ -97,3 +97,12 @@ animation:starDrift 65s linear infinite reverse,starTwinkle 4s ease-in-out infin
 /* Match Java address/port vertical spacing to Bedrock */
 .java .java-copy+.java-copy{margin-top:8px}
 .java .java-launch{margin-top:18px}
+
+/* Java port is neutral gray; hover explains that Java needs no port */
+.java .java-copy.port{background:#252525;border-color:#555;color:#c7c7c7}
+.java .java-copy.port .java-copy__icon{background:#4a4a4a;border-left-color:#555;color:#fff}
+.java .java-copy.port:hover{background:#202020;border-color:#777}
+.java .java-copy.port:hover .java-copy__icon{background:#555;border-left-color:#555}
+.java .java-copy.port:hover::after{content:"You don’t need the port for Java!";font-size:12px;white-space:nowrap}
+.java .java-copy.port.copied{background:#092719!important;border-color:#35c875!important;color:#9af0bb!important}
+.java .java-copy.port.copied .java-copy__icon{background:#159447!important;border-left-color:#159447!important}
