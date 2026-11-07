@@ -72,37 +72,58 @@ applyOverlay.addEventListener('click',event=>{if(event.target===applyOverlay)set
 document.addEventListener('keydown',event=>{if(event.key==='Escape'&&applyOverlay.classList.contains('open'))setApplyOpen(false)});
 
 
-// Whitelist form: submit through FormSubmit AJAX and report its actual response.
+// Whitelist application: submit via FormSubmit AJAX and keep the result inside the form.
 const applicationForm=document.querySelector('.application-form');
+
 if(applicationForm){
- const submitButton=applicationForm.querySelector('button[type="submit"]');
- const status=document.createElement('p');
- status.className='application-status';
- status.setAttribute('role','status');
- status.setAttribute('aria-live','polite');
- applicationForm.append(status);
- applicationForm.addEventListener('submit',async event=>{
-   event.preventDefault();
-   if(!applicationForm.reportValidity()) return;
-   const originalLabel=submitButton.textContent;
-   submitButton.disabled=true;
-   submitButton.textContent='sending...';
-   status.textContent='sending your application...';
-   status.classList.remove('success','error');
-   try{
-     const endpoint=applicationForm.action.replace('https://formsubmit.co/','https://formsubmit.co/ajax/');
-     const response=await fetch(endpoint,{method:'POST',body:new FormData(applicationForm),headers:{Accept:'application/json'}});
-     const result=await response.json();
-     if(!response.ok||result.success===false||result.success==='false') throw new Error(result.message||'Submission failed');
-     status.textContent='application sent! check your email for any follow-up.';
-     status.classList.add('success');
-     applicationForm.reset();
-   }catch(error){
-     status.textContent='failed to send. check your connection and try again.';
-     status.classList.add('error');
-   }finally{
-     submitButton.disabled=false;
-     submitButton.textContent=originalLabel;
-   }
- });
+  const submitButton=applicationForm.querySelector('button[type="submit"]');
+  const status=document.createElement('p');
+  status.className='application-status';
+  status.setAttribute('role','status');
+  status.setAttribute('aria-live','polite');
+  applicationForm.append(status);
+
+  applicationForm.addEventListener('submit',async event=>{
+    event.preventDefault();
+
+    if(!applicationForm.reportValidity()) return;
+
+    const originalLabel=submitButton.textContent;
+    submitButton.disabled=true;
+    submitButton.textContent='sending...';
+    status.textContent='sending your application...';
+    status.classList.remove('success','error');
+
+    try{
+      const payload=Object.fromEntries(new FormData(applicationForm).entries());
+      if(payload.email) payload._replyto=payload.email;
+
+      const response=await fetch('https://formsubmit.co/ajax/argonmcadmin@gmail.com',{
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'Accept':'application/json'
+        },
+        body:JSON.stringify(payload)
+      });
+
+      const result=await response.json();
+      const accepted=result.success===true || result.success==='true';
+
+      if(!response.ok || !accepted){
+        throw new Error(result.message || 'The form service did not accept the application.');
+      }
+
+      applicationForm.reset();
+      status.textContent='successfully sent!';
+      status.classList.add('success');
+      submitButton.textContent='sent!';
+    }catch(error){
+      status.textContent='failed to send. please check your connection and try again.';
+      status.classList.add('error');
+      submitButton.textContent=originalLabel;
+    }finally{
+      submitButton.disabled=false;
+    }
+  });
 }
