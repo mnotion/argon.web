@@ -188,3 +188,12 @@ body::before{
 .apply-overlay .application-content{width:100%!important;max-width:440px!important;min-width:0!important}
 .apply-overlay .application-info{display:block!important;visibility:visible!important;opacity:1!important;min-width:0!important;width:100%!important;box-sizing:border-box!important}
 @media(max-width:760px){.apply-overlay .apply-panel{width:min(520px,calc(100vw - 24px))!important}.apply-overlay .application-layout{grid-template-columns:minmax(0,1fr)!important}.apply-overlay .application-content{max-width:none!important}}
+
+/* Compact application modal height */
+.apply-overlay .apply-panel{padding:22px!important;max-height:calc(100vh - 36px)!important}
+.apply-overlay .application-info{padding:16px!important}
+.apply-overlay .application-info h2{margin-bottom:10px!important}
+.apply-overlay .application-info p{font-size:13px!important;line-height:1.35!important;margin-bottom:9px!important}
+.apply-overlay .application-info p:last-child{margin-bottom:0!important}
+.apply-overlay .application-content .application-form label{margin-bottom:12px!important}
+.apply-overlay .application-content h1{margin-bottom:6px!important}
