@@ -228,3 +228,6 @@ body::before{
 .apply-card-wrap .apply-help{position:absolute!important;top:-16px!important;right:-16px!important;width:34px!important;height:34px!important;display:grid!important;place-items:center!important;z-index:100!important;border:2px solid #1688ff!important;border-radius:50%!important;background:#0878e8!important;color:#fff!important;font:bold 20px/1 Arial!important;cursor:help!important;padding:0!important;visibility:visible!important;opacity:1!important}
 .apply-card-wrap .apply-help-tip{display:none;position:absolute;top:42px;right:0;width:min(330px,calc(100vw - 36px));padding:15px 16px;background:#202020;color:#eee;border:1px solid #1688ff;border-radius:10px;box-shadow:0 8px 28px #0009;font:14px/1.5 Arial;text-align:left;white-space:normal;z-index:101}
 .apply-card-wrap .apply-help:hover .apply-help-tip,.apply-card-wrap .apply-help:focus-visible .apply-help-tip{display:block}
+
+.apply-card-wrap .apply-help{top:24px!important;right:-54px!important;width:40px!important;height:40px!important;border:2px solid #69b5ff!important;background:#0878e8!important;box-shadow:0 0 0 4px #000,0 4px 14px #000b!important;font-size:23px!important}
+.apply-overlay{background:rgba(0,0,0,.70)!important}
