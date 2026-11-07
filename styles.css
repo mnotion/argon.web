@@ -216,3 +216,8 @@ body::before{
 .apply-help-tip{display:none;position:absolute;top:42px;right:0;width:min(330px,calc(100vw - 36px));padding:15px 16px;background:#202020;color:#eee;border:1px solid #1688ff;border-radius:10px;box-shadow:0 8px 28px #0009;font:14px/1.5 Arial;text-align:left;white-space:normal}
 .apply-help:hover .apply-help-tip,.apply-help:focus-visible .apply-help-tip{display:block}
 .application-info{display:none!important}
+
+/* Make the help icon visible outside the panel edge (not clipped) */
+.apply-overlay .apply-panel{overflow:visible!important}
+.apply-overlay .apply-help{top:-16px!important;right:-16px!important;display:grid!important;visibility:visible!important;opacity:1!important}
+.apply-overlay .apply-help-tip{z-index:9999!important}
