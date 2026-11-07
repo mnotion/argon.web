@@ -119,9 +119,9 @@ if(applicationForm){
       }
 
       applicationForm.reset();
-      status.textContent='successfully sent!';
+      status.textContent='application submitted!';
       status.classList.add('success');
-      submitButton.textContent='sent!';
+      submitButton.textContent='submitted!';
     }catch(error){
       status.textContent='failed to send. please check your connection and try again.';
       status.classList.add('error');
