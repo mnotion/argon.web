@@ -67,3 +67,13 @@ openApply.addEventListener('click',()=>setApplyOpen(true));
 closeApply.addEventListener('click',()=>setApplyOpen(false));
 applyOverlay.addEventListener('click',event=>{if(event.target===applyOverlay)setApplyOpen(false)});
 document.addEventListener('keydown',event=>{if(event.key==='Escape'&&applyOverlay.classList.contains('open'))setApplyOpen(false)});
+
+const identitySelect=document.getElementById('identity-confirmation');
+const identityOtherWrap=document.getElementById('identity-other-wrap');
+const identityOther=document.getElementById('identity-other');
+identitySelect.addEventListener('change',()=>{
+ const isOther=identitySelect.value==='Other';
+ identityOtherWrap.hidden=!isOther;
+ identityOther.required=isOther;
+ if(!isOther)identityOther.value='';
+});
