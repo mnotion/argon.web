@@ -103,7 +103,7 @@ animation:starDrift 65s linear infinite reverse,starTwinkle 4s ease-in-out infin
 .java .java-copy.port .java-copy__icon{background:#4a4a4a;border-left-color:#555;color:#fff}
 .java .java-copy.port:hover{background:#202020;border-color:#777}
 .java .java-copy.port:hover .java-copy__icon{background:#555;border-left-color:#555}
-.java .java-copy.port:hover::after{content:"You don’t need the port for Java!";font-size:12px;white-space:nowrap}
+.java .java-copy.port:hover::after{content:"you dont need the port for java!";font-size:12px;white-space:nowrap}
 .java .java-copy.port.copied{background:#092719!important;border-color:#35c875!important;color:#9af0bb!important}
 .java .java-copy.port.copied .java-copy__icon{background:#159447!important;border-left-color:#159447!important}
 
