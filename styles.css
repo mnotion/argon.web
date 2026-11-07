@@ -37,15 +37,23 @@ body.form-open .apply-fab{visibility:hidden;pointer-events:none}
 .back-argonplat{position:fixed;top:18px;right:20px;z-index:10;padding:10px 14px;border:1px solid #505050;border-radius:9px;background:#303030;color:#ddd;font-size:14px;text-decoration:none;transition:background .2s,border-color .2s}\n.back-argonplat:hover{background:#3b3b3b;border-color:#666}\n
 .useless-button{position:fixed;top:20px;left:20px;z-index:10;width:48px;height:48px;display:flex;align-items:center;justify-content:center;border:1px solid #555;border-radius:50%;background:#303030;color:#f2f2f2;font-size:24px;font-weight:700;text-decoration:none;box-shadow:0 0 0 rgba(0,0,0,0);transition:transform .22s ease,background .22s ease,border-color .22s ease,box-shadow .22s ease,color .22s ease}\n.useless-button:hover{transform:rotate(12deg) scale(1.12);background:#125da8;border-color:#369bff;color:#fff;box-shadow:0 0 20px #168bff88}\n.useless-button:active{transform:scale(.96)}\n
 
-/* Subtle starfield background */
-body{background-color:#252525;background-image:
-radial-gradient(1px 1px at 8% 17%,#ffffffaa 99%,transparent),
-radial-gradient(1px 1px at 23% 68%,#ffffff88 99%,transparent),
-radial-gradient(1.5px 1.5px at 41% 32%,#ffffff99 99%,transparent),
-radial-gradient(1px 1px at 59% 82%,#ffffff77 99%,transparent),
-radial-gradient(1px 1px at 76% 14%,#ffffffaa 99%,transparent),
-radial-gradient(1px 1px at 91% 53%,#ffffff88 99%,transparent),
-radial-gradient(1px 1px at 67% 46%,#ffffff66 99%,transparent),
-radial-gradient(1px 1px at 14% 91%,#ffffff77 99%,transparent),
-radial-gradient(1px 1px at 84% 91%,#ffffff99 99%,transparent);
-background-size:100% 100%;background-attachment:fixed}
+/* Deep-space background with continuously drifting, twinkling stars */
+:root{--bg:#000}
+body{background:#000;isolation:isolate}
+body::before,body::after{content:"";position:fixed;inset:-100%;z-index:-1;pointer-events:none;background-repeat:repeat;background-size:420px 420px}
+body::before{opacity:.8;background-image:
+radial-gradient(1px 1px at 35px 60px,#fff 98%,transparent),
+radial-gradient(1px 1px at 180px 125px,#dbeafe 98%,transparent),
+radial-gradient(1.5px 1.5px at 300px 320px,#fff 98%,transparent),
+radial-gradient(1px 1px at 245px 40px,#ffffffaa 98%,transparent),
+radial-gradient(1px 1px at 90px 280px,#fff 98%,transparent);
+animation:starDrift 100s linear infinite}
+body::after{opacity:.55;background-size:260px 260px;background-image:
+radial-gradient(1px 1px at 25px 95px,#fff 98%,transparent),
+radial-gradient(1.5px 1.5px at 150px 200px,#fff 98%,transparent),
+radial-gradient(1px 1px at 220px 35px,#bfdbfe 98%,transparent),
+radial-gradient(2px 2px at 75px 220px,#fff 98%,transparent);
+animation:starDrift 65s linear infinite reverse,starTwinkle 4s ease-in-out infinite alternate}
+@keyframes starDrift{from{transform:translate3d(0,0,0)}to{transform:translate3d(420px,260px,0)}}
+@keyframes starTwinkle{from{opacity:.25}to{opacity:.8}}
+@media(prefers-reduced-motion:reduce){body::before,body::after{animation:none}}
