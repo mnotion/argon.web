@@ -138,7 +138,6 @@ const playerCount=document.getElementById('player-count');
 const playersPanel=document.getElementById('players-panel');
 const playersList=document.getElementById('players-list');
 const playersClose=document.getElementById('players-close');
-let playerNames=[];
 function setPlayersOpen(open){
   playersPanel.classList.toggle('open',open);
   playersPanel.setAttribute('aria-hidden',String(!open));
@@ -150,17 +149,25 @@ document.addEventListener('keydown',event=>{if(event.key==='Escape')setPlayersOp
 document.addEventListener('click',event=>{
   if(playersPanel.classList.contains('open')&&!playersPanel.contains(event.target)&&event.target!==playerCount)setPlayersOpen(false);
 });
-function renderPlayers(list){
+function renderPlayers(list,total,unavailableMessage){
   playersList.replaceChildren();
-  if(!list.length){
-    const empty=document.createElement('p');empty.className='players-empty';
-    empty.textContent='Player names are not currently provided by the server.';playersList.append(empty);return;
+  const info=document.createElement('p');
+  info.className='players-empty';
+  if(list.length){
+    info.textContent='Server supplied '+list.length+' player name'+(list.length===1?'':'s')+
+      (Number.isFinite(total)?' for '+total+' online players.':'.');
+  }else{
+    info.textContent=unavailableMessage ||
+      (total>0?'Server reports '+total+' players online, but is not providing their names.':'No players are currently reported online.');
   }
+  playersList.append(info);
   list.forEach(player=>{
+    const username=player.name_clean||player.name_raw||'Unknown';
+    const avatarKey=player.uuid||username;
     const row=document.createElement('div');row.className='player-row';
     const avatar=document.createElement('img');avatar.className='player-avatar';avatar.alt='';avatar.width=32;avatar.height=32;avatar.loading='lazy';
-    avatar.src='https://mc-heads.net/avatar/'+encodeURIComponent(player.uuid||player.name_clean||player.name_raw||'Steve')+'/32';
-    const name=document.createElement('span');name.className='player-name';name.textContent=player.name_clean||player.name_raw||'Unknown';
+    avatar.src='https://mc-heads.net/avatar/'+encodeURIComponent(avatarKey)+'/32';
+    const name=document.createElement('span');name.className='player-name';name.textContent=username;
     row.append(avatar,name);playersList.append(row);
   });
 }
@@ -169,13 +176,14 @@ async function refreshPlayerCount(){
     const response=await fetch('https://api.mcstatus.io/v2/status/java/argon.serv.lol:10134');
     if(!response.ok)throw new Error('Status unavailable');
     const data=await response.json();
-    playerCount.textContent=data.online&&data.players?data.players.online+' players online':'Server offline';
+    const total=data.online&&data.players?Number(data.players.online):0;
+    playerCount.textContent=data.online&&data.players?total+' players online':'Server offline';
     playerCount.classList.toggle('offline',!data.online);
-    playerNames=data.online&&data.players&&Array.isArray(data.players.list)?data.players.list:[];
-    renderPlayers(playerNames);
+    const names=data.online&&data.players&&Array.isArray(data.players.list)?data.players.list:[];
+    renderPlayers(names,total);
   }catch{
     playerCount.textContent='Player count unavailable';playerCount.classList.add('offline');
-    renderPlayers([]);
+    renderPlayers([],null,'Player data is unavailable right now.');
   }
 }
 refreshPlayerCount();setInterval(refreshPlayerCount,60000);
