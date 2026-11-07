@@ -57,3 +57,13 @@ animation:starDrift 65s linear infinite reverse,starTwinkle 4s ease-in-out infin
 @keyframes starDrift{from{transform:translate3d(0,0,0)}to{transform:translate3d(420px,260px,0)}}
 @keyframes starTwinkle{from{opacity:.25}to{opacity:.8}}
 @media(prefers-reduced-motion:reduce){body::before,body::after{animation:none}}
+
+/* Java address copy button: clipboard icon slides over, then expands on hover */
+.java-copy{position:relative;width:250px;max-width:100%;height:58px;padding:0 18px;overflow:hidden;border-radius:18px!important;border:1px solid #8a6d17;background:#29230e;color:#ffe16a;justify-content:flex-start;transition:background .3s,border-color .3s}
+.java-copy__text{display:block;white-space:nowrap;transition:opacity .2s,color .2s}
+.java-copy__icon{position:absolute;right:0;top:0;height:100%;width:58px;display:flex;align-items:center;justify-content:center;background:#b58b16;color:#fff;border-left:1px solid #8a6d17;border-radius:0 17px 17px 0;transition:width .3s,background .2s,border-radius .3s}
+.java-copy:hover{background:#211b08;border-color:#b58b16}
+.java-copy:hover .java-copy__text{opacity:0}
+.java-copy:hover .java-copy__icon{width:100%;border-left:0;border-radius:17px;background:#a77f10}
+.java-copy:hover::after{content:"Copy to clipboard";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font:600 15px Inter,system-ui,sans-serif;letter-spacing:.01em}
+.java-copy:active .java-copy__icon{background:#88670c}
