@@ -231,3 +231,7 @@ body::before{
 
 .apply-card-wrap .apply-help{top:24px!important;right:-54px!important;width:40px!important;height:40px!important;border:2px solid #69b5ff!important;background:#0878e8!important;box-shadow:0 0 0 4px #000,0 4px 14px #000b!important;font-size:23px!important}
 .apply-overlay{background:rgba(0,0,0,.70)!important}
+
+
+/* Main: keep the page much more visible behind the open application */
+.apply-overlay{background:rgba(0,0,0,.28)!important}
