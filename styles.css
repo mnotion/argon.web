@@ -354,3 +354,13 @@ body::before{
 .player-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:500 14px/1.3 ui-monospace,Menlo,monospace}
 .players-empty{margin:8px;padding:10px;color:#9eafc1;font-size:13px;line-height:1.5}
 @media(max-width:560px){#players-panel{top:48px;right:10px;width:min(290px,calc(100vw - 20px));max-height:calc(100dvh - 70px)}}
+
+/* Player popup header controls */
+.players-header-actions{display:flex;align-items:center;gap:7px}
+#players-refresh,#players-close{display:grid;place-items:center;width:29px;height:29px;border:0;border-radius:7px;background:#1c2b3a;color:#d9ecff;font-size:20px;line-height:1;cursor:pointer}
+#players-refresh{font-size:23px}
+#players-refresh:hover,#players-close:hover{background:#29445f}
+#players-refresh.refreshing{animation:playerRefreshSpin .7s linear infinite}
+#players-refresh:disabled{opacity:.6;cursor:wait}
+@keyframes playerRefreshSpin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){#players-refresh.refreshing{animation:none}}
