@@ -159,3 +159,8 @@ body::before{
 /* Keep optional Discord note inline with its label */
 .application-form label:has(.optional){display:block}
 .application-form label .optional{display:inline;margin-left:6px}
+
+.application-status{margin:0;font-size:13px;line-height:1.4;color:#bdbdbd}
+.application-status.success{color:#78e6a4}
+.application-status.error{color:#ff8585}
+.application-form button:disabled{opacity:.65;cursor:wait}
