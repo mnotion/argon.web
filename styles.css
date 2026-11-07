@@ -273,3 +273,11 @@ body{animation:argonPageEnter .55s ease-out both}
 }
 /* Remove Android's square tap-highlight overlay on pressed controls */
 a,button,[role="button"],input,textarea,select{-webkit-tap-highlight-color:transparent}
+
+/* Force genuine document scrolling on phones */
+@media(max-width:560px){
+ html{height:auto!important;overflow-y:scroll!important;overscroll-behavior-y:auto!important}
+ body{height:auto!important;min-height:100vh!important;min-height:100dvh!important;overflow:visible!important;overflow-y:visible!important}
+ main{height:auto!important;overflow:visible!important}
+ .servers{padding-bottom:32px!important}
+}
