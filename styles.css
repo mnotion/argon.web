@@ -364,3 +364,16 @@ body::before{
 #players-refresh:disabled{opacity:.6;cursor:wait}
 @keyframes playerRefreshSpin{to{transform:rotate(360deg)}}
 @media(prefers-reduced-motion:reduce){#players-refresh.refreshing{animation:none}}
+
+/* Keep the application help tooltip within the right edge on mobile */
+@media(max-width:560px){
+ .apply-card-wrap .apply-help{
+  left:auto!important;
+  right:0!important;
+  top:18px!important;
+  max-width:calc(100vw - 28px)!important;
+  width:max-content!important;
+ }
+ .apply-card-wrap .apply-help::before,
+ .apply-card-wrap .apply-help::after{left:auto!important;right:22px!important}
+}
