@@ -15,24 +15,7 @@ h2{font-size:clamp(42px,6vw,64px);font-weight:500;margin:0 0 24px}
 .launch:hover{background:#0878d1;box-shadow:0 0 20px #168bffbb}
 #toast{position:fixed;top:20px;right:20px;padding:12px 18px;border:1px solid var(--border);border-radius:9px;background:#303030;opacity:0;pointer-events:none;z-index:20}
 #toast.show{opacity:1}
-.apply-fab{position:fixed;left:24px;bottom:24px;width:62px;height:62px;border:1px solid #369bff;border-radius:50%;background:#125da8;color:#fff;font-size:35px;line-height:1;cursor:pointer;box-shadow:0 0 18px #168bff66;transition:transform .2s,box-shadow .2s;z-index:30}
-body.form-open .apply-fab{visibility:hidden;pointer-events:none}
-.apply-fab:hover{transform:scale(1.08);box-shadow:0 0 25px #168bff99}
-.apply-overlay{position:fixed;inset:0;display:flex;align-items:flex-end;justify-content:flex-start;padding:24px;background:#0008;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .25s,visibility .25s;z-index:25}
-.apply-overlay.open{opacity:1;visibility:visible;pointer-events:auto}
-.apply-panel{position:relative;width:min(440px,100%);max-height:calc(100vh - 48px);overflow:auto;padding:30px;border:1px solid #4b4b4b;border-radius:18px;background:#2b2b2b;box-shadow:0 18px 60px #0008;transform:translateY(35px) scale(.96);transform-origin:bottom left;opacity:0;transition:transform .32s cubic-bezier(.2,.8,.2,1),opacity .25s}
-.apply-overlay.open .apply-panel{transform:translateY(0) scale(1);opacity:1}
-.apply-panel h1{font-size:30px;font-weight:550;margin:0 0 8px}
-.apply-panel .intro{color:#aaa;margin:0 0 24px}
-.apply-close{position:absolute;right:14px;top:12px;width:34px;height:34px;border:0;border-radius:50%;background:#3b3b3b;color:#ddd;font-size:25px;cursor:pointer}
-.application-form{display:grid;gap:16px}
-.application-form label{display:grid;gap:8px;color:#ddd;font-size:14px}
-.application-form input,.application-form textarea,.application-form select{width:100%;padding:12px;border:1px solid #505050;border-radius:8px;background:#202020;color:#f2f2f2;font:inherit}
-.application-form button{border:1px solid #369bff;border-radius:8px;padding:13px;background:#125da8;color:white;font:inherit;font-weight:650;cursor:pointer}
-.application-form button:hover{background:#0878d1}
 .optional{color:#999;font-weight:400}
-@media(max-width:560px){.servers{grid-template-columns:1fr;gap:48px}h2{font-size:46px}.apply-fab{left:18px;bottom:18px}.apply-overlay{padding:12px}.apply-panel{max-height:calc(100vh - 24px);padding:24px}}
-@media(prefers-reduced-motion:reduce){.apply-panel,.apply-overlay,.apply-fab{transition:none}}
 
 .back-argonplat{position:fixed;top:18px;right:20px;z-index:10;padding:10px 14px;border:1px solid #505050;border-radius:9px;background:#303030;color:#ddd;font-size:14px;text-decoration:none;transition:background .2s,border-color .2s}\n.back-argonplat:hover{background:#3b3b3b;border-color:#666}\n
 .useless-button{position:fixed;top:20px;left:20px;z-index:10;width:48px;height:48px;display:flex;align-items:center;justify-content:center;border:1px solid #555;border-radius:50%;background:#303030;color:#f2f2f2;font-size:24px;font-weight:700;text-decoration:none;box-shadow:0 0 0 rgba(0,0,0,0);transition:transform .22s ease,background .22s ease,border-color .22s ease,box-shadow .22s ease,color .22s ease}\n.useless-button:hover{transform:rotate(12deg) scale(1.12);background:#125da8;border-color:#369bff;color:#fff;box-shadow:0 0 20px #168bff88}\n.useless-button:active{transform:scale(.96)}\n
@@ -138,8 +121,6 @@ body::before{
 .java .java-copy.port:hover .java-copy__icon{background:rgba(145,145,145,.35)}
 
 /* Performance tuning: smaller composited layers and minimal hover effects */
-.apply-panel{box-shadow:0 12px 32px #0007}
-.apply-fab{box-shadow:0 0 12px #168bff44}
 .launch{box-shadow:0 0 8px #168bff44}
 .java-launch{box-shadow:0 0 8px #ffd43b33}
 
@@ -157,119 +138,47 @@ body::before{
 .java .java-copy.port:hover .java-copy__icon,.java .java-copy.port:focus-visible .java-copy__icon{background:rgba(125,125,125,1);border-left-color:rgba(200,200,200,1);color:#fff}
 
 /* Keep optional Discord note inline with its label */
-.application-form label:has(.optional){display:block}
-.application-form label .optional{display:inline;margin-left:6px}
 
-.application-status{margin:0;font-size:13px;line-height:1.4;color:#bdbdbd}
-.application-status.success{color:#78e6a4}
-.application-status.error{color:#ff8585}
-.application-form button:disabled{opacity:.65;cursor:wait}
 
-/* Whitelist application guidance panel */
-.apply-panel{width:min(980px,calc(100vw - 48px))}
-.application-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,.78fr);gap:24px;align-items:stretch}
-.application-content{min-width:0}
-.application-info{align-self:stretch;padding:22px;border:1px solid #454545;border-radius:12px;background:#242424;color:#c9c9c9}
-.application-info h2{margin:0 0 16px;font-size:20px;color:#f1f1f1}
-.application-info p{margin:0 0 14px;line-height:1.55;font-size:14px}
-.application-info p:last-child{margin-bottom:0;color:#aaa}
-@media(max-width:700px){.apply-panel{width:min(520px,100%)}.application-layout{grid-template-columns:1fr;gap:18px}.application-info{padding:18px}}
 
-/* Correct application/info two-column proportions */
-.apply-panel{width:min(820px,calc(100vw - 48px))}
-.application-layout{grid-template-columns:minmax(0,440px) minmax(240px,1fr);gap:22px;align-items:start}
-.application-content{width:100%;max-width:440px}
-.application-info{width:100%;box-sizing:border-box}
-@media(max-width:760px){.apply-panel{width:min(520px,100%)}.application-layout{grid-template-columns:1fr}.application-content{max-width:none}}
 
-/* Definitive application modal layout: fixed form column + visible info column */
-.apply-overlay .apply-panel{box-sizing:border-box!important;width:min(900px,calc(100vw - 48px))!important}
-.apply-overlay .application-layout{display:grid!important;grid-template-columns:minmax(0,440px) minmax(0,1fr)!important;gap:24px!important;align-items:start!important}
-.apply-overlay .application-content{width:100%!important;max-width:440px!important;min-width:0!important}
-.apply-overlay .application-info{display:block!important;visibility:visible!important;opacity:1!important;min-width:0!important;width:100%!important;box-sizing:border-box!important}
-@media(max-width:760px){.apply-overlay .apply-panel{width:min(520px,calc(100vw - 24px))!important}.apply-overlay .application-layout{grid-template-columns:minmax(0,1fr)!important}.apply-overlay .application-content{max-width:none!important}}
 
-/* Compact application modal height */
-.apply-overlay .apply-panel{padding:22px!important;max-height:calc(100vh - 36px)!important}
-.apply-overlay .application-info{padding:16px!important}
-.apply-overlay .application-info h2{margin-bottom:10px!important}
-.apply-overlay .application-info p{font-size:13px!important;line-height:1.35!important;margin-bottom:9px!important}
-.apply-overlay .application-info p:last-child{margin-bottom:0!important}
-.apply-overlay .application-content .application-form label{margin-bottom:12px!important}
-.apply-overlay .application-content h1{margin-bottom:6px!important}
 
 /* Actually halve the modal's desktop width */
-.apply-overlay .apply-panel{width:min(560px,calc(100vw - 28px))!important;max-width:560px!important;box-sizing:border-box!important}
-.apply-overlay .application-layout{grid-template-columns:minmax(0,1fr)!important;gap:16px!important}
-.apply-overlay .application-content{max-width:none!important;width:100%!important}
-.apply-overlay .application-info{width:100%!important}
 
 /* Make whitelist modal 25% shorter */
-.apply-overlay .apply-panel{max-height:75vh!important;overflow-y:auto!important}
 
 /* Correct modal width: reduce current 560px by 25%; leave height untouched */
-.apply-overlay .apply-panel{width:min(420px,calc(100vw - 28px))!important;max-width:420px!important}
 
-/* Application info hover icon outside the modal, top-right */
-.apply-panel{position:relative}
-.apply-help{position:absolute;right:-17px;top:-17px;width:34px;height:34px;border:2px solid #1688ff;border-radius:50%;background:#0878e8;color:#fff;font:bold 20px/1 Arial;display:grid;place-items:center;cursor:help;z-index:20;padding:0}
-.apply-help-tip{display:none;position:absolute;top:42px;right:0;width:min(330px,calc(100vw - 36px));padding:15px 16px;background:#202020;color:#eee;border:1px solid #1688ff;border-radius:10px;box-shadow:0 8px 28px #0009;font:14px/1.5 Arial;text-align:left;white-space:normal}
-.apply-help:hover .apply-help-tip,.apply-help:focus-visible .apply-help-tip{display:block}
-.application-info{display:none!important}
 
 /* Make the help icon visible outside the panel edge (not clipped) */
-.apply-overlay .apply-panel{overflow:visible!important}
-.apply-overlay .apply-help{top:-16px!important;right:-16px!important;display:grid!important;visibility:visible!important;opacity:1!important}
-.apply-overlay .apply-help-tip{z-index:9999!important}
 
 /* Info icon is a sibling of the scrollable panel, so the panel cannot clip it */
-.apply-card-wrap{position:relative;width:min(420px,calc(100vw - 28px));max-width:420px;overflow:visible}
-.apply-card-wrap .apply-panel{width:100%!important;max-width:100%!important;overflow-x:hidden!important;overflow-y:auto!important}
-.apply-card-wrap .apply-help{position:absolute!important;top:-16px!important;right:-16px!important;width:34px!important;height:34px!important;display:grid!important;place-items:center!important;z-index:100!important;border:2px solid #1688ff!important;border-radius:50%!important;background:#0878e8!important;color:#fff!important;font:bold 20px/1 Arial!important;cursor:help!important;padding:0!important;visibility:visible!important;opacity:1!important}
-.apply-card-wrap .apply-help-tip{display:none;position:absolute;top:42px;right:0;width:min(330px,calc(100vw - 36px));padding:15px 16px;background:#202020;color:#eee;border:1px solid #1688ff;border-radius:10px;box-shadow:0 8px 28px #0009;font:14px/1.5 Arial;text-align:left;white-space:normal;z-index:101}
-.apply-card-wrap .apply-help:hover .apply-help-tip,.apply-card-wrap .apply-help:focus-visible .apply-help-tip{display:block}
-
-.apply-card-wrap .apply-help{top:24px!important;right:-54px!important;width:40px!important;height:40px!important;border:2px solid #69b5ff!important;background:#0878e8!important;box-shadow:0 0 0 4px #000,0 4px 14px #000b!important;font-size:23px!important}
-.apply-overlay{background:rgba(0,0,0,.70)!important}
 
 
-/* Main: keep the page much more visible behind the open application */
-.apply-overlay{background:rgba(0,0,0,.28)!important}
 
 
-/* Main: make the application backdrop nearly clear */
-.apply-overlay{background:rgba(0,0,0,.08)!important}
+
 
 /* Main: subtle entrance and one-time golden info-button burst */
 @keyframes argonPageEnter{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 body{animation:argonPageEnter .55s ease-out both}
-.apply-help{animation:argonInfoGold 2.7s ease-out both!important;position:relative}
 @keyframes argonInfoGold{
   0%,100%{background:#0878e8!important;border-color:#69b5ff!important;box-shadow:0 0 0 4px #000,0 4px 14px #000b!important}
   8%,78%{background:#e7ad27!important;border-color:#ffe58a!important;box-shadow:0 0 10px 5px #ffcf4d99,0 0 26px 10px #ffc83d66!important;color:#fff!important}
 }
-.apply-help::before,.apply-help::after{content:"✦";position:absolute;pointer-events:none;color:#ffe58a;font-size:15px;opacity:0;animation:argonSpark 1.05s ease-out 0s 2}
-.apply-help::before{left:-3px;top:0;--sx:-25px;--sy:-24px}
-.apply-help::after{right:-2px;bottom:0;--sx:26px;--sy:24px;animation-delay:.12s}
 @keyframes argonSpark{0%{opacity:0;transform:scale(.2) translate(0,0)}15%{opacity:1}100%{opacity:0;transform:scale(.8) translate(var(--sx),var(--sy))}}
-@media(prefers-reduced-motion:reduce){body{animation:none}.apply-help,.apply-help::before,.apply-help::after{animation:none!important}}
 
 
-/* Mobile: let the server list scroll naturally and keep the application button viewport-fixed */
 @media(max-width:560px){
   html,body{height:auto!important;min-height:100%!important;overflow-x:hidden!important;overflow-y:auto!important}
   body{height:auto!important;min-height:100svh!important;padding:24px 18px 100px!important}
   main{height:auto!important;min-height:0!important;display:block!important}
   .servers{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:100px!important;width:100%!important}
   .server{width:100%!important}
-  .apply-fab{position:fixed!important;left:18px!important;bottom:18px!important;z-index:1000!important}
 }
 
-/* Mobile application: place the info circle inside the card's top-right corner */
 @media(max-width:560px){
-  .apply-card-wrap .apply-help{top:18px!important;right:18px!important;width:38px!important;height:38px!important;z-index:110!important}
-  .apply-card-wrap .apply-panel{padding-top:58px!important}
-  .apply-card-wrap .apply-help-tip{right:0!important;top:44px!important;width:min(300px,calc(100vw - 72px))!important}
 }
 /* Remove Android's square tap-highlight overlay on pressed controls */
 a,button,[role="button"],input,textarea,select{-webkit-tap-highlight-color:transparent}
@@ -294,16 +203,12 @@ a,button,[role="button"],input,textarea,select{-webkit-tap-highlight-color:trans
  .address,.port{font-size:16px!important}
  .java-copy__text,.copy-label{font-size:16px!important}
  .launch{margin-top:12px!important;min-height:48px!important;padding:10px 14px!important;font-size:16px!important}
- .apply-fab{width:54px!important;height:54px!important;font-size:30px!important;left:14px!important;bottom:14px!important}
 }
 
 @media(max-width:560px){
- .apply-card-wrap .apply-help{left:18px!important;right:auto!important;top:18px!important}
 }
 
-/* Mobile fixed application launcher and denser all-over starfield */
 @media(max-width:560px){
- .apply-fab{position:fixed!important;left:14px!important;bottom:14px!important;right:auto!important;z-index:9999!important}
 }
 body::before{
  background-size:180px 180px!important;
@@ -365,15 +270,11 @@ body::before{
 @keyframes playerRefreshSpin{to{transform:rotate(360deg)}}
 @media(prefers-reduced-motion:reduce){#players-refresh.refreshing{animation:none}}
 
-/* Keep the application help tooltip within the right edge on mobile */
 @media(max-width:560px){
- .apply-card-wrap .apply-help{
   left:auto!important;
   right:0!important;
   top:18px!important;
   max-width:calc(100vw - 28px)!important;
   width:max-content!important;
  }
- .apply-card-wrap .apply-help::before,
- .apply-card-wrap .apply-help::after{left:auto!important;right:22px!important}
 }
