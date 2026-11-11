@@ -181,9 +181,7 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
 
         Location spawn = lobby.getSpawnLocation();
         Block platform = lobby.getBlockAt(spawn.getBlockX(), spawn.getBlockY() - 1, spawn.getBlockZ());
-        if (platform.getType().isAir()) {
-            platform.setType(Material.BARRIER, false);
-        }
+        platform.setType(Material.BARRIER, false);
         player.teleport(spawn);
 
         String submittedName = data.getString(key + ".firstName", "");
@@ -266,6 +264,18 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
         UUID id = event.getPlayer().getUniqueId();
         stages.remove(id);
         stopNamePrompt(id);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void keepUnapprovedInLobby(PlayerTeleportEvent event) {
+        Player player = event.getPlayer();
+        if (!pending(player) || event.getTo() == null) {
+            return;
+        }
+        World lobby = Bukkit.getWorld(getConfig().getString("lobby-world", "application_lobby"));
+        if (lobby != null && event.getTo().getWorld() != lobby) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
