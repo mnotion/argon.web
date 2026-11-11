@@ -29,6 +29,7 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
     private final Map<UUID, String> stages = new HashMap<>();
     private final Map<UUID, BukkitTask> promptTasks = new HashMap<>();
     private final Set<UUID> approved = new HashSet<>();
+    private final Set<UUID> afk = new HashSet<>();
     private YamlConfiguration data;
     private File dataFile;
 
@@ -75,7 +76,7 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
                 return true;
             }
             if (args.length < 2) {
-                sender.sendMessage("/app approve|reject <player>");
+                sender.sendMessage("/app approve|remove|reject <player>");
                 return true;
             }
 
@@ -89,12 +90,33 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
                     release(online);
                 }
                 sender.sendMessage("Added " + target.getName() + " to the Argon player whitelist.");
+             } else if (args[0].equalsIgnoreCase("remove")) {
+                approved.remove(id);
+                data.set("pending." + id, null);
+                saveData();
+                Player online = Bukkit.getPlayer(id);
+                if (online != null) begin(online);
+                sender.sendMessage("Removed " + target.getName() + " from the Argon whitelist.");
             } else if (args[0].equalsIgnoreCase("reject")) {
                 data.set("pending." + id, null);
                 saveData();
                 sender.sendMessage("Removed application for " + target.getName());
             } else {
-                sender.sendMessage("/app approve|whitelist|reject <player>");
+                sender.sendMessage("/app approve|whitelist|remove|reject <player>");
+            }
+            return true;
+        });
+
+        Objects.requireNonNull(getCommand("afk")).setExecutor((sender, command, label, args) -> {
+            if (!(sender instanceof Player player)) {
+                sender.sendMessage("/afk can only be used by a player.");
+                return true;
+            }
+            UUID id = player.getUniqueId();
+            if (afk.remove(id)) player.sendMessage("AFK protection disabled.");
+            else {
+                afk.add(id);
+                player.sendMessage("AFK protection enabled: mobs won't target or hurt you; hunger is paused. Players can hit you, but cannot kill you.");
             }
             return true;
         });
@@ -198,11 +220,13 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
 
     private void showNamePrompt(Player player) {
         player.showTitle(Title.title(
-                Component.text("APPLICATION REQUIRED", NamedTextColor.GOLD),
-                Component.text("Type /send <your real first name>", NamedTextColor.WHITE),
+                Component.text("You need approval from the elites", NamedTextColor.GOLD),
+                Component.text("Type /send (your name)", NamedTextColor.WHITE),
                 Title.Times.times(Duration.ofMillis(200), Duration.ofSeconds(5), Duration.ofMillis(300))
         ));
-        player.sendMessage(Component.text("Submit your real first name with: /send <name>", NamedTextColor.YELLOW));
+        player.sendMessage("just type in the chat /send (your name) so the elites can decide if you should play or not");
+        player.sendMessage("Just type your real name in - we can't tell who it is that wants to join otherwise");
+        player.sendMessage("Don't do silly things like break other peoples stuff or you will be deprived of everything this dunya has to offer...yuck");
     }
 
     private void startNamePrompt(Player player) {
@@ -215,8 +239,8 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
                 return;
             }
             online.showTitle(Title.title(
-                    Component.text("APPLICATION REQUIRED", NamedTextColor.GOLD),
-                    Component.text("Type /send <your real first name>", NamedTextColor.WHITE),
+                    Component.text("Approval required", NamedTextColor.GOLD),
+                    Component.text("/send (your name)", NamedTextColor.WHITE),
                     Title.Times.times(Duration.ofMillis(200), Duration.ofSeconds(5), Duration.ofMillis(300))
             ));
         }, 100L, 100L);
@@ -261,6 +285,7 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
 
     @EventHandler
     public void quit(PlayerQuitEvent event) {
+        afk.remove(event.getPlayer().getUniqueId());
         UUID id = event.getPlayer().getUniqueId();
         stages.remove(id);
         stopNamePrompt(id);
@@ -271,6 +296,34 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
         if (event.getEntity() instanceof Player player && pending(player)) {
             event.setCancelled(true);
         }
+    }
+
+    @EventHandler
+    public void afkMobTarget(EntityTargetLivingEntityEvent event) {
+        if (event.getTarget() instanceof Player player && afk.contains(player.getUniqueId())
+                && !(event.getEntity() instanceof Player)) event.setCancelled(true);
+    }
+
+    @EventHandler
+    public void afkDamage(EntityDamageEvent event) {
+        if (!(event.getEntity() instanceof Player player) || !afk.contains(player.getUniqueId())) return;
+        if (!(event instanceof EntityDamageByEntityEvent byEntity) || !(byEntity.getDamager() instanceof Player))
+            event.setCancelled(true);
+    }
+
+    @EventHandler
+    public void afkPvPNonlethal(EntityDamageByEntityEvent event) {
+        if (event.getEntity() instanceof Player victim && afk.contains(victim.getUniqueId())
+                && event.getDamager() instanceof Player) {
+            double safeDamage = victim.getHealth() - 1.0;
+            if (safeDamage <= 0) event.setCancelled(true);
+            else event.setDamage(Math.min(event.getDamage(), safeDamage));
+        }
+    }
+
+    @EventHandler
+    public void afkHunger(FoodLevelChangeEvent event) {
+        if (event.getEntity() instanceof Player player && afk.contains(player.getUniqueId())) event.setCancelled(true);
     }
 
     @EventHandler
