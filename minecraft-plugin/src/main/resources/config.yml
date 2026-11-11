@@ -1,0 +1,5 @@
+# Argon Applications admin notifications.
+# The shared secret must match ARGON_APPLICATION_WEBHOOK_SECRET in Supabase Edge Function Secrets.
+application-notification:
+  endpoint: "https://mtonkduhblqamfoctmmh.supabase.co/functions/v1/argon-application-email"
+  secret: ""
