@@ -637,7 +637,12 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
                 if (timeoutUntil > System.currentTimeMillis()) {
                     activateTimeout(player, timeoutUntil, true);
                 } else if (timeoutUntil > 0L) {
-                    data.set("timeouts." + player.getUniqueId(), null);
+                    UUID playerId = player.getUniqueId();
+                    timeouts.remove(playerId);
+                    afk.remove(playerId);
+                    afkOrigins.remove(playerId);
+                    timeoutAddedAfk.remove(playerId);
+                    data.set("timeouts." + playerId, null);
                     saveData();
                 }
             }
@@ -663,9 +668,10 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
 
     @EventHandler
     public void quit(PlayerQuitEvent event) {
-        afkOrigins.remove(event.getPlayer().getUniqueId());
         UUID id = event.getPlayer().getUniqueId();
-        if (!timeouts.containsKey(id)) afk.remove(id);
+        afkOrigins.remove(id);
+        afk.remove(id);
+        timeoutAddedAfk.remove(id);
         BukkitTask timeoutTask = timeoutTasks.remove(id);
         if (timeoutTask != null) timeoutTask.cancel();
         stages.remove(id);
