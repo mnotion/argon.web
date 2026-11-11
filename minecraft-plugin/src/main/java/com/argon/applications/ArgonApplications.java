@@ -44,7 +44,7 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
     private final Map<UUID, org.bukkit.Location> afkOrigins = new HashMap<>();
     private final Map<UUID, Long> combatTags = new HashMap<>();
     private static final long PVP_AFK_COOLDOWN_MILLIS = 60_000L;
-    private final Map<UUID, NamedTextColor> chatColours = new ConcurrentHashMap<>();
+    private final Map<UUID, TextColor> chatColours = new ConcurrentHashMap<>();
     private final HttpClient notificationClient = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(5))
             .build();
