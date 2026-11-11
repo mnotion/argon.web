@@ -1,5 +1,6 @@
 package com.argon.applications;
 
+import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.title.Title;
@@ -7,6 +8,7 @@ import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.*;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
@@ -24,12 +26,41 @@ import java.io.File;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class ArgonApplications extends JavaPlugin implements Listener {
     private final Map<UUID, String> stages = new HashMap<>();
     private final Map<UUID, BukkitTask> promptTasks = new HashMap<>();
     private final Set<UUID> approved = new HashSet<>();
     private final Set<UUID> afk = new HashSet<>();
+    private final Map<UUID, NamedTextColor> chatColours = new ConcurrentHashMap<>();
+
+    private static final List<String> CHAT_COLOUR_NAMES = List.of(
+            "black", "dark_blue", "dark_green", "dark_aqua",
+            "dark_red", "dark_purple", "gold", "gray",
+            "dark_gray", "blue", "green", "aqua",
+            "red", "light_purple", "yellow", "white"
+    );
+
+    private static final Map<String, NamedTextColor> CHAT_COLOURS = Map.ofEntries(
+            Map.entry("black", NamedTextColor.BLACK),
+            Map.entry("dark_blue", NamedTextColor.DARK_BLUE),
+            Map.entry("dark_green", NamedTextColor.DARK_GREEN),
+            Map.entry("dark_aqua", NamedTextColor.DARK_AQUA),
+            Map.entry("dark_red", NamedTextColor.DARK_RED),
+            Map.entry("dark_purple", NamedTextColor.DARK_PURPLE),
+            Map.entry("gold", NamedTextColor.GOLD),
+            Map.entry("gray", NamedTextColor.GRAY),
+            Map.entry("dark_gray", NamedTextColor.DARK_GRAY),
+            Map.entry("blue", NamedTextColor.BLUE),
+            Map.entry("green", NamedTextColor.GREEN),
+            Map.entry("aqua", NamedTextColor.AQUA),
+            Map.entry("red", NamedTextColor.RED),
+            Map.entry("light_purple", NamedTextColor.LIGHT_PURPLE),
+            Map.entry("yellow", NamedTextColor.YELLOW),
+            Map.entry("white", NamedTextColor.WHITE)
+    );
+
     private YamlConfiguration data;
     private File dataFile;
 
@@ -50,6 +81,20 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
                 approved.add(UUID.fromString(id));
             } catch (IllegalArgumentException ignored) {
                 getLogger().warning("Ignoring invalid approved UUID: " + id);
+            }
+        }
+
+        if (data.getConfigurationSection("chat-colours") != null) {
+            for (String id : data.getConfigurationSection("chat-colours").getKeys(false)) {
+                try {
+                    String name = data.getString("chat-colours." + id, "").toLowerCase(Locale.ROOT);
+                    NamedTextColor colour = CHAT_COLOURS.get(name);
+                    if (colour != null) {
+                        chatColours.put(UUID.fromString(id), colour);
+                    }
+                } catch (IllegalArgumentException ignored) {
+                    getLogger().warning("Ignoring invalid chat-colour entry: " + id);
+                }
             }
         }
 
@@ -119,6 +164,42 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
                 player.sendMessage("AFK protection enabled: mobs won't target or hurt you; hunger is paused. Players can hit you, but cannot kill you.");
             }
             return true;
+        });
+
+        Objects.requireNonNull(getCommand("colour")).setExecutor((sender, command, label, args) -> {
+            if (!(sender instanceof Player player)) {
+                sender.sendMessage("Only players can change their chat-name colour.");
+                return true;
+            }
+            if (args.length == 0) {
+                player.sendMessage("Available chat colours (Java + Bedrock): " + String.join(", ", CHAT_COLOUR_NAMES));
+                player.sendMessage("Usage: /colour <colour>");
+                return true;
+            }
+            if (args.length != 1) {
+                player.sendMessage("Usage: /colour <colour>");
+                return true;
+            }
+
+            String colourName = args[0].toLowerCase(Locale.ROOT);
+            NamedTextColor colour = CHAT_COLOURS.get(colourName);
+            if (colour == null) {
+                player.sendMessage("Unknown colour. Available: " + String.join(", ", CHAT_COLOUR_NAMES));
+                return true;
+            }
+
+            chatColours.put(player.getUniqueId(), colour);
+            data.set("chat-colours." + player.getUniqueId(), colourName);
+            saveData();
+            player.sendMessage(Component.text("Your chat name colour is now ", NamedTextColor.GRAY)
+                    .append(Component.text(colourName, colour))
+                    .append(Component.text(".", NamedTextColor.GRAY)));
+            return true;
+        });
+        Objects.requireNonNull(getCommand("colour")).setTabCompleter((sender, command, alias, args) -> {
+            if (args.length != 1) return List.of();
+            String prefix = args[0].toLowerCase(Locale.ROOT);
+            return CHAT_COLOUR_NAMES.stream().filter(name -> name.startsWith(prefix)).toList();
         });
 
         Objects.requireNonNull(getCommand("send")).setExecutor((sender, command, label, args) -> {
@@ -219,14 +300,21 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
     }
 
     private void showNamePrompt(Player player) {
-        player.showTitle(Title.title(
-                Component.text("You need approval from the elites", NamedTextColor.GOLD),
-                Component.text("Type /send (your name)", NamedTextColor.WHITE),
-                Title.Times.times(Duration.ofMillis(200), Duration.ofSeconds(5), Duration.ofMillis(300))
+        // Keep the approval instructions in normal chat-sized text instead of a large,
+        // repeatedly displayed full-screen title.
+        player.sendMessage(Component.text("You need approval from the elites", NamedTextColor.GOLD));
+        player.sendMessage(Component.text(
+                "just type in the chat /send (your name) so the elites can decide if you should play or not",
+                NamedTextColor.WHITE
         ));
-        player.sendMessage("just type in the chat /send (your name) so the elites can decide if you should play or not");
-        player.sendMessage("Just type your real name in - we can't tell who it is that wants to join otherwise");
-        player.sendMessage("Don't do silly things like break other peoples stuff or you will be deprived of everything this dunya has to offer...yuck");
+        player.sendMessage(Component.text(
+                "Just type your real name in - we can't tell who it is that wants to join otherwise",
+                NamedTextColor.GRAY
+        ));
+        player.sendMessage(Component.text(
+                "Don't do silly things like break other peoples stuff or you will be deprived of everything this dunya has to offer...yuck",
+                NamedTextColor.DARK_GRAY
+        ));
     }
 
     private void startNamePrompt(Player player) {
@@ -238,10 +326,9 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
                 stopNamePrompt(id);
                 return;
             }
-            online.showTitle(Title.title(
-                    Component.text("Approval required", NamedTextColor.GOLD),
-                    Component.text("/send (your name)", NamedTextColor.WHITE),
-                    Title.Times.times(Duration.ofMillis(200), Duration.ofSeconds(5), Duration.ofMillis(300))
+            online.sendActionBar(Component.text(
+                    "Approval required — use /send (your name)",
+                    NamedTextColor.GOLD
             ));
         }, 100L, 100L);
         promptTasks.put(id, task);
@@ -264,8 +351,32 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
         }
     }
 
+    private NamedTextColor ensureChatColour(Player player) {
+        UUID id = player.getUniqueId();
+        NamedTextColor existing = chatColours.get(id);
+        if (existing != null) return existing;
+
+        String name = CHAT_COLOUR_NAMES.get(new Random().nextInt(CHAT_COLOUR_NAMES.size()));
+        NamedTextColor selected = CHAT_COLOURS.get(name);
+        chatColours.put(id, selected);
+        data.set("chat-colours." + id, name);
+        saveData();
+        return selected;
+    }
+
+    @EventHandler
+    public void chatNameColour(AsyncChatEvent event) {
+        NamedTextColor colour = chatColours.getOrDefault(event.getPlayer().getUniqueId(), NamedTextColor.WHITE);
+        event.renderer((source, sourceDisplayName, message, viewer) ->
+                Component.text(source.getName(), colour)
+                        .append(Component.text(": ", NamedTextColor.GRAY))
+                        .append(message)
+        );
+    }
+
     @EventHandler
     public void join(PlayerJoinEvent event) {
+        ensureChatColour(event.getPlayer());
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -304,19 +415,33 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
                 && !(event.getEntity() instanceof Player)) event.setCancelled(true);
     }
 
+    private Player getPlayerAttacker(EntityDamageByEntityEvent event) {
+        if (event.getDamager() instanceof Player player) return player;
+        if (event.getDamager() instanceof Projectile projectile
+                && projectile.getShooter() instanceof Player player) return player;
+        return null;
+    }
+
     @EventHandler
     public void afkDamage(EntityDamageEvent event) {
         if (!(event.getEntity() instanceof Player player) || !afk.contains(player.getUniqueId())) return;
-        if (!(event instanceof EntityDamageByEntityEvent byEntity) || !(byEntity.getDamager() instanceof Player))
+
+        // AFK players ignore mobs, environmental damage, and other non-player damage.
+        // Direct attacks and projectiles fired by players are still allowed.
+        if (!(event instanceof EntityDamageByEntityEvent byEntity) || getPlayerAttacker(byEntity) == null) {
             event.setCancelled(true);
+        }
     }
 
     @EventHandler
     public void afkPvPNonlethal(EntityDamageByEntityEvent event) {
-        if (event.getEntity() instanceof Player victim && afk.contains(victim.getUniqueId())
-                && event.getDamager() instanceof Player) {
-            double safeDamage = victim.getHealth() - 1.0;
-            if (safeDamage <= 0) event.setCancelled(true);
+        if (!(event.getEntity() instanceof Player victim) || !afk.contains(victim.getUniqueId())
+                || getPlayerAttacker(event) == null) return;
+
+        // Absorption is included so a player can take hits but never be reduced below one health.
+        double safeDamage = Math.max(0.0, victim.getHealth() - 1.0 + victim.getAbsorptionAmount());
+        if (event.getFinalDamage() > safeDamage) {
+            if (safeDamage <= 0.0) event.setCancelled(true);
             else event.setDamage(Math.min(event.getDamage(), safeDamage));
         }
     }
