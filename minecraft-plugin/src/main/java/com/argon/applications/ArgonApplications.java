@@ -3,6 +3,7 @@ package com.argon.applications;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.title.Title;
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -24,7 +25,13 @@ import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -35,6 +42,9 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
     private final Set<UUID> afk = new HashSet<>();
     private final Map<UUID, org.bukkit.Location> afkOrigins = new HashMap<>();
     private final Map<UUID, NamedTextColor> chatColours = new ConcurrentHashMap<>();
+    private final HttpClient notificationClient = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(5))
+            .build();
 
     private static final List<String> CHAT_COLOUR_NAMES = List.of(
             "black", "dark_blue", "dark_green", "dark_aqua",
@@ -67,6 +77,7 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
+        saveDefaultConfig();
         dataFile = new File(getDataFolder(), "applications.yml");
         if (!dataFile.exists()) {
             try {
@@ -241,9 +252,13 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
             String key = "pending." + id;
             data.set(key + ".player", player.getName());
             data.set(key + ".firstName", realName);
-            data.set(key + ".submitted", System.currentTimeMillis());
-            data.set(key + ".bedrock", isBedrock(player));
+            long submittedAt = System.currentTimeMillis();
+            boolean bedrockPlayer = isBedrock(player);
+            data.set(key + ".submitted", submittedAt);
+            data.set(key + ".bedrock", bedrockPlayer);
             saveData();
+
+            sendApplicationNotification(player, realName, submittedAt, bedrockPlayer);
 
             stages.remove(id);
             stopNamePrompt(id);
@@ -255,6 +270,81 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
             player.sendMessage("Application submitted. You can keep exploring while staff review it.");
             return true;
         });
+    }
+
+    private void sendApplicationNotification(Player player, String realName, long submittedAt, boolean bedrockPlayer) {
+        String endpoint = getConfig().getString("application-notification.endpoint", "").trim();
+        String sharedSecret = getConfig().getString("application-notification.secret", "").trim();
+        if (endpoint.isEmpty() || sharedSecret.isEmpty()) {
+            getLogger().warning("Application notification is not configured. The application was saved locally, but no email was sent.");
+            return;
+        }
+
+        String payload = "{"
+                + "\"first_name\":\"" + jsonEscape(realName) + "\","
+                + "\"minecraft_username\":\"" + jsonEscape(player.getName()) + "\","
+                + "\"player_uuid\":\"" + player.getUniqueId() + "\","
+                + "\"edition\":\"" + (bedrockPlayer ? "BEDROCK" : "JAVA") + "\","
+                + "\"server_name\":\"" + jsonEscape(Bukkit.getServer().getName()) + "\","
+                + "\"server_version\":\"" + jsonEscape(Bukkit.getVersion()) + "\","
+                + "\"submitted_at\":\"" + Instant.ofEpochMilli(submittedAt) + "\""
+                + "}";
+
+        HttpRequest request;
+        try {
+            request = HttpRequest.newBuilder(URI.create(endpoint))
+                    .timeout(Duration.ofSeconds(15))
+                    .header("Content-Type", "application/json")
+                    .header("X-Argon-Token", sharedSecret)
+                    .POST(HttpRequest.BodyPublishers.ofString(payload, StandardCharsets.UTF_8))
+                    .build();
+        } catch (IllegalArgumentException exception) {
+            getLogger().severe("Invalid application notification endpoint in config.yml: " + exception.getMessage());
+            return;
+        }
+
+        String username = player.getName();
+        Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
+            try {
+                HttpResponse<String> response = notificationClient.send(
+                        request,
+                        HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8)
+                );
+                if (response.statusCode() >= 200 && response.statusCode() < 300) {
+                    getLogger().info("Application notification email sent for " + username + ".");
+                } else {
+                    getLogger().warning("Application notification failed for " + username
+                            + " (HTTP " + response.statusCode() + "): " + response.body());
+                }
+            } catch (InterruptedException exception) {
+                Thread.currentThread().interrupt();
+                getLogger().warning("Application notification interrupted for " + username + ".");
+            } catch (Exception exception) {
+                getLogger().warning("Could not send application notification for " + username + ": "
+                        + exception.getMessage());
+            }
+        });
+    }
+
+    private String jsonEscape(String value) {
+        StringBuilder escaped = new StringBuilder(value.length() + 16);
+        for (int index = 0; index < value.length(); index++) {
+            char character = value.charAt(index);
+            switch (character) {
+                case '"' -> escaped.append("\\\"");
+                case '\\' -> escaped.append("\\\\");
+                case '\b' -> escaped.append("\\b");
+                case '\f' -> escaped.append("\\f");
+                case '\n' -> escaped.append("\\n");
+                case '\r' -> escaped.append("\\r");
+                case '\t' -> escaped.append("\\t");
+                default -> {
+                    if (character < 0x20) escaped.append(String.format(Locale.ROOT, "\\u%04x", (int) character));
+                    else escaped.append(character);
+                }
+            }
+        }
+        return escaped.toString();
     }
 
     private void saveData() {
@@ -296,6 +386,11 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
         player.setFoodLevel(20);
         player.setSaturation(20);
         player.setHealth(20);
+        player.showTitle(Title.title(
+                Component.text("READ CHAT!", NamedTextColor.GOLD, TextDecoration.BOLD),
+                Component.text("Your approval instructions are in chat.", NamedTextColor.WHITE),
+                Title.Times.times(Duration.ofMillis(150), Duration.ofSeconds(5), Duration.ofMillis(400))
+        ));
 
         String submittedName = data.getString(key + ".firstName", "");
         if (submittedName != null && !submittedName.isBlank()) {
@@ -324,6 +419,10 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
         player.sendMessage(Component.text(
                 "Don't do silly things like break other peoples stuff or you will be deprived of everything this dunya has to offer...yuck",
                 NamedTextColor.DARK_GRAY
+        ));
+        player.sendMessage(Component.text(
+                "Privacy notice: /send emails your submitted first name, Minecraft username and UUID, Java/Bedrock edition, submission time and server version to argonmcadmin@gmail.com and stores the application record. No IP address is collected.",
+                NamedTextColor.GRAY
         ));
     }
 
@@ -378,9 +477,9 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
     public void chatNameColour(AsyncChatEvent event) {
         NamedTextColor colour = chatColours.getOrDefault(event.getPlayer().getUniqueId(), NamedTextColor.WHITE);
         event.renderer((source, sourceDisplayName, message, viewer) ->
-                Component.text(source.getName(), colour)
+                sourceDisplayName.color(colour)
                         .append(Component.text(": ", NamedTextColor.GRAY))
-                        .append(message)
+                        .append(message.color(NamedTextColor.WHITE))
         );
     }
 
