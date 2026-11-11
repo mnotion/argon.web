@@ -477,7 +477,7 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
     public void chatNameColour(AsyncChatEvent event) {
         NamedTextColor colour = chatColours.getOrDefault(event.getPlayer().getUniqueId(), NamedTextColor.WHITE);
         event.renderer((source, sourceDisplayName, message, viewer) ->
-                sourceDisplayName.color(colour)
+                Component.text(source.getName(), colour)
                         .append(Component.text(": ", NamedTextColor.GRAY))
                         .append(message.color(NamedTextColor.WHITE))
         );
