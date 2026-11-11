@@ -1,8 +1,8 @@
 name: ArgonApplications
-version: 0.2.0
+version: 0.3.0
 main: com.argon.applications.ArgonApplications
 api-version: '1.21'
-softdepend: [Multiverse-Core, floodgate]
+softdepend: [floodgate]
 commands:
   app:
     description: Manage the Argon player whitelist and applications
