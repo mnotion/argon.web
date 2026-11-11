@@ -1,12 +1,15 @@
 name: ArgonApplications
-version: 0.1.0
+version: 0.2.0
 main: com.argon.applications.ArgonApplications
 api-version: '1.21'
 softdepend: [Multiverse-Core, floodgate]
 commands:
   app:
-    description: Manage player applications
-    usage: /app <list|approve|reject>
+    description: Manage the Argon player whitelist and applications
+    usage: /app <list|approve|whitelist|reject>
+  send:
+    description: Submit your real first name for an Argon application
+    usage: /send <your real first name>
 permissions:
   argonapplications.admin:
     default: op
