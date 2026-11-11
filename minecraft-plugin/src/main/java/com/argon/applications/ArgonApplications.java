@@ -1000,6 +1000,35 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
         }
 
         String action = args[0].toLowerCase(Locale.ROOT);
+        if (action.equals("bc") || action.equals("broadcast")) {
+            if (args.length < 2) {
+                sender.sendMessage("Usage: /app bc <text> (alias: /app broadcast <text>)");
+                return;
+            }
+            String message = String.join(" ", Arrays.copyOfRange(args, 1, args.length)).trim();
+            if (message.isBlank()) {
+                sender.sendMessage("Broadcast text cannot be empty.");
+                return;
+            }
+            if (message.length() > 256) {
+                sender.sendMessage("Broadcast text must be 256 characters or fewer.");
+                return;
+            }
+
+            Component title = Component.text(message, NamedTextColor.YELLOW, TextDecoration.BOLD);
+            int recipients = 0;
+            for (Player online : Bukkit.getOnlinePlayers()) {
+                online.showTitle(Title.title(
+                        title,
+                        Component.empty(),
+                        Title.Times.times(Duration.ofMillis(200), Duration.ofSeconds(5), Duration.ofMillis(700))
+                ));
+                online.playSound(online.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.35f);
+                recipients++;
+            }
+            sender.sendMessage(Component.text("Broadcast sent to " + recipients + " online players.", NamedTextColor.YELLOW));
+            return;
+        }
         if (args.length < 2) {
             sender.sendMessage("Usage: /app approve|remove|reject|decline|resetlimit|addlimit|timeout <player> [value]");
             return;

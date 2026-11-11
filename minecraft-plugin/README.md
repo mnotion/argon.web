@@ -19,6 +19,7 @@ Paper plugin for the Argon Minecraft server. It uses the server's existing world
 - `/app resetlimit <player>` (resets today's request count, restoring the player's full daily allowance)
 - `/app addlimit <player> <number>` (sets that player's daily `/send` cap to the specified number)
 - `/app timeout <player> <seconds>` (temporarily freezes the player, enables AFK protection, blocks chat/commands, item drops and pickups, and displays a yellow `HH:MM:SS` countdown)
+- `/app bc <text>` or `/app broadcast <text>` (sends the text as a large, bold yellow title to every online player with a note-block chime)
 
 ## Player commands
 - `/afk` toggles AFK protection. Mobs and environmental damage are ignored and hunger is paused. AFK players cannot hit or be hit by players, including with projectiles. A player who has dealt or received PvP damage must wait 60 seconds after the last hit before entering AFK mode. Moving 2 blocks automatically exits AFK mode.

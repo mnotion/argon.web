@@ -1,12 +1,12 @@
 name: ArgonApplications
-version: 0.8.0
+version: 0.8.1
 main: com.argon.applications.ArgonApplications
 api-version: '1.21'
 softdepend: [floodgate]
 commands:
   app:
     description: Manage the Argon player whitelist and applications
-    usage: /app <list|approve|whitelist|remove|reject|decline|resetlimit|addlimit|timeout>
+    usage: /app <list|approve|whitelist|remove|reject|decline|resetlimit|addlimit|timeout|bc|broadcast>
   afk:
     description: Toggle AFK protection
     usage: /afk
