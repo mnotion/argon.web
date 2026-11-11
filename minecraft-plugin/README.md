@@ -23,7 +23,19 @@ Paper plugin for the Argon Minecraft server. It uses the server's existing world
 
 Available colours: black, dark_blue, dark_green, dark_aqua, dark_red, dark_purple, gold, gray, dark_gray, blue, green, aqua, red, light_purple, yellow, white.
 
-Unapproved players receive the approval instructions in regular chat-sized text. The reminder uses the action bar rather than a large repeating title.
+Unapproved players see a large `READ CHAT!` title when they join, followed by the approval instructions in regular chat-sized text. The reminder uses the action bar rather than a large repeating title.
+
+## Application email notifications
+When a pending player submits `/send <real first name>`, the plugin sends their submitted first name, Minecraft username, UUID, Java/Bedrock edition, submission time, server name and server version to the Supabase Edge Function. The function stores the application in the private `public.minecraft_applications` table and emails **argonmcadmin@gmail.com** through Resend. IP addresses are not collected.
+
+Configure the following Supabase Edge Function secrets:
+- `ARGON_APPLICATION_WEBHOOK_SECRET`: a private shared token
+- `RESEND_API_KEY`: an API key from Resend
+- `ARGON_EMAIL_FROM`: a sender address on a domain verified with Resend
+
+Set the same `ARGON_APPLICATION_WEBHOOK_SECRET` as `application-notification.secret` in `plugins/ArgonApplications/config.yml`. The endpoint is prefilled by default. Never commit the shared token or Resend API key to GitHub.
+
+Players are shown a privacy notice before submitting. The email function is protected by the shared token and has JWT verification disabled because it is called by the Minecraft server, not a signed-in Supabase user.
 
 ## Server setup
 - Keep the vanilla Minecraft server whitelist **disabled** if unapproved players should be able to join. The plugin maintains its own Argon approval list; the vanilla whitelist blocks players before this plugin can handle them.
@@ -33,4 +45,4 @@ Unapproved players receive the approval instructions in regular chat-sized text.
 Requires Java 21 and Maven. Run `mvn package` in this directory and upload the generated JAR from `target/` to the server's `plugins/` folder, replacing the old ArgonApplications JAR, then restart.
 
 ## Data and limitations
-Applications are stored locally in `plugins/ArgonApplications/applications.yml`. This version does not yet sync with ArgonWeb or automatically update the vanilla Minecraft whitelist. First names are self-reported and are not verified.
+Applications are stored locally in `plugins/ArgonApplications/applications.yml` and, when the notification endpoint is configured, in Supabase. First names are self-reported and are not verified. IP addresses are deliberately not stored.
