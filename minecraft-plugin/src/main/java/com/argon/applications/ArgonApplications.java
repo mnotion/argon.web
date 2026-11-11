@@ -545,6 +545,14 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
         return !approved.contains(player.getUniqueId()) && !bypass(player);
     }
 
+    private void clearMobTargets(Player player) {
+        for (org.bukkit.entity.Entity nearby : player.getNearbyEntities(64, 64, 64)) {
+            if (nearby instanceof org.bukkit.entity.Mob mob && player.equals(mob.getTarget())) {
+                mob.setTarget(null);
+            }
+        }
+    }
+
     private void begin(Player player) {
         UUID id = player.getUniqueId();
         String key = "pending." + id;
@@ -567,6 +575,10 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
         player.setFoodLevel(20);
         player.setSaturation(20);
         player.setHealth(20);
+        for (org.bukkit.potion.PotionEffect effect : new ArrayList<>(player.getActivePotionEffects())) {
+            player.removePotionEffect(effect.getType());
+        }
+        clearMobTargets(player);
         String declinedReason = data.getString("declined." + id + ".reason", "");
         if (declinedReason != null && !declinedReason.isBlank()) {
             stages.remove(id);
@@ -712,17 +724,29 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
         stopNamePrompt(id);
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void damage(EntityDamageEvent event) {
         if (event.getEntity() instanceof Player player && pending(player)) {
             event.setCancelled(true);
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void pendingPotionEffects(EntityPotionEffectEvent event) {
+        if (!(event.getEntity() instanceof Player player) || !pending(player)) return;
+        if (event.getAction() == EntityPotionEffectEvent.Action.ADDED
+                || event.getAction() == EntityPotionEffectEvent.Action.CHANGED) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void afkMobTarget(EntityTargetLivingEntityEvent event) {
-        if (event.getTarget() instanceof Player player && afk.contains(player.getUniqueId())
-                && !(event.getEntity() instanceof Player)) event.setCancelled(true);
+        if (!(event.getEntity() instanceof Player)
+                && event.getTarget() instanceof Player player
+                && (pending(player) || afk.contains(player.getUniqueId()))) {
+            event.setCancelled(true);
+        }
     }
 
     private Player getPlayerAttacker(EntityDamageByEntityEvent event) {
@@ -751,7 +775,7 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void afkCannotLaunchProjectiles(ProjectileLaunchEvent event) {
         if (event.getEntity().getShooter() instanceof Player shooter
-                && afk.contains(shooter.getUniqueId())) {
+                && (afk.contains(shooter.getUniqueId()) || pending(shooter))) {
             event.setCancelled(true);
         }
     }
@@ -772,6 +796,13 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
     @EventHandler
     public void afkHunger(FoodLevelChangeEvent event) {
         if (event.getEntity() instanceof Player player && afk.contains(player.getUniqueId())) event.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void pendingTeleport(PlayerTeleportEvent event) {
+        if (pending(event.getPlayer())) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler
@@ -837,9 +868,10 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void combat(EntityDamageByEntityEvent event) {
-        if ((event.getDamager() instanceof Player attacker && pending(attacker))
+        Player attacker = getPlayerAttacker(event);
+        if ((attacker != null && pending(attacker))
                 || (event.getEntity() instanceof Player victim && pending(victim))) {
             event.setCancelled(true);
         }
@@ -873,7 +905,7 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
             return;
         }
         String label = event.getMessage().split(" ", 2)[0].toLowerCase(Locale.ROOT);
-        if (!Set.of("/send", "/msg", "/tell", "/help", "/colour", "/color").contains(label)) {
+        if (!Set.of("/send", "/colour", "/color", "/colours", "/colors").contains(label)) {
             event.setCancelled(true);
         }
     }
