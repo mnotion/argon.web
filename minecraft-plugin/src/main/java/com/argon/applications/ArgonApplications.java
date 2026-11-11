@@ -802,6 +802,7 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
 
     private void release(Player player) {
         restorePlayerState(player);
+        player.sendMessage(Component.text("you're allowed to play!", NamedTextColor.GREEN));
         player.showTitle(Title.title(
                 Component.text("enjoy", NamedTextColor.GREEN, TextDecoration.BOLD),
                 Component.empty(),
