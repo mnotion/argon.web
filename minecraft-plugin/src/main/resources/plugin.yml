@@ -13,7 +13,7 @@ commands:
   colour:
     description: Set the colour of your chat name
     usage: /colour <colour>
-    aliases: [color]
+    aliases: [color, colours, colors]
   send:
     description: Submit your real first name for an Argon application
     usage: /send <your real first name>
