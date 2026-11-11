@@ -7,7 +7,7 @@ Paper plugin for the Argon Minecraft server. It uses the server's existing world
 - They can move around freely, but cannot interact with blocks or entities, open/use inventories, drop or pick up items, attack, or take damage.
 - Players who have not submitted their real first name see a repeating prompt to use `/send <real first name>`. Submitting it records the application; chat and movement remain available.
 - Players remain in the same world while staff review their application.
-- When staff approve a player with `/app approve <player>`, restrictions are lifted immediately if they are online. Their previously saved inventory and game mode are restored without teleporting them.
+- When staff approve a player with `/app approve <player>`, restrictions are lifted immediately if they are online. Their previously saved inventory and game mode are restored without teleporting them, and they see a large green `enjoy` title.
 - Approved players join normally on future connections. Operators and players with the bypass permission are not restricted.
 
 ## Staff commands
@@ -15,15 +15,16 @@ Paper plugin for the Argon Minecraft server. It uses the server's existing world
 - `/app approve <player>` (also accepts `/app whitelist <player>`)
 - `/app remove <player>` (revokes Argon approval and returns an online player to the application state)
 - `/app reject <player>`
+- `/app decline <player> <reason>` (shows the player a large red `REJECTED` title with the reason beneath it; the decision is saved for future joins)
 
 ## Player commands
-- `/afk` toggles AFK protection. Mobs and environmental damage are ignored and hunger is paused. Player attacks still work, but cannot reduce an AFK player's health below 1 HP.
+- `/afk` toggles AFK protection. Mobs and environmental damage are ignored and hunger is paused. AFK players cannot hit or be hit by players, including with projectiles. A player who has dealt or received PvP damage must wait 60 seconds after the last hit before entering AFK mode. Moving 2 blocks automatically exits AFK mode.
 - `/colour` lists all shared Java/Bedrock chat-name colours.
 - `/colour <colour>` changes only the colour of the player's name in chat. The colour is randomly assigned on first join and saved.
 
 Available colours: black, dark_blue, dark_green, dark_aqua, dark_red, dark_purple, gold, gray, dark_gray, blue, green, aqua, red, light_purple, yellow, white.
 
-Unapproved players see a large `READ CHAT!` title when they join, followed by the approval instructions in regular chat-sized text. The reminder uses the action bar rather than a large repeating title.
+Unapproved players see a large `READ CHAT!` title when they join, followed by spaced instructions in chat. The reminder uses the action bar.
 
 ## Application email notifications
 When a pending player submits `/send <real first name>`, the plugin sends their submitted first name, Minecraft username, UUID, Java/Bedrock edition, submission time, server name and server version to the Supabase Edge Function. The function stores the application in the private `public.minecraft_applications` table and emails **argonmcadmin@gmail.com** through Resend. IP addresses are not collected.
@@ -35,7 +36,7 @@ Configure the following Supabase Edge Function secrets:
 
 Set the same `ARGON_APPLICATION_WEBHOOK_SECRET` as `application-notification.secret` in `plugins/ArgonApplications/config.yml`. The endpoint is prefilled by default. Never commit the shared token or Resend API key to GitHub.
 
-Players are shown a privacy notice before submitting. The email function is protected by the shared token and has JWT verification disabled because it is called by the Minecraft server, not a signed-in Supabase user.
+The email function is protected by the shared token and has JWT verification disabled because it is called by the Minecraft server, not a signed-in Supabase user.
 
 ## Server setup
 - Keep the vanilla Minecraft server whitelist **disabled** if unapproved players should be able to join. The plugin maintains its own Argon approval list; the vanilla whitelist blocks players before this plugin can handle them.
