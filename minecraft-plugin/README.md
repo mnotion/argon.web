@@ -13,7 +13,17 @@ Paper plugin for the Argon Minecraft server. It uses the server's existing world
 ## Staff commands
 - `/app list`
 - `/app approve <player>` (also accepts `/app whitelist <player>`)
+- `/app remove <player>` (revokes Argon approval and returns an online player to the application state)
 - `/app reject <player>`
+
+## Player commands
+- `/afk` toggles AFK protection. Mobs and environmental damage are ignored and hunger is paused. Player attacks still work, but cannot reduce an AFK player's health below one heart.
+- `/colour` lists all shared Java/Bedrock chat-name colours.
+- `/colour <colour>` changes only the colour of the player's name in chat. The colour is randomly assigned on first join and saved.
+
+Available colours: black, dark_blue, dark_green, dark_aqua, dark_red, dark_purple, gold, gray, dark_gray, blue, green, aqua, red, light_purple, yellow, white.
+
+Unapproved players receive the approval instructions in regular chat-sized text. The reminder uses the action bar rather than a large repeating title.
 
 ## Server setup
 - Keep the vanilla Minecraft server whitelist **disabled** if unapproved players should be able to join. The plugin maintains its own Argon approval list; the vanilla whitelist blocks players before this plugin can handle them.
