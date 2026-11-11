@@ -33,6 +33,8 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -43,6 +45,9 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
     private final Set<UUID> afk = new HashSet<>();
     private final Map<UUID, org.bukkit.Location> afkOrigins = new HashMap<>();
     private final Map<UUID, Long> combatTags = new HashMap<>();
+    private final Map<UUID, Long> timeouts = new ConcurrentHashMap<>();
+    private final Map<UUID, BukkitTask> timeoutTasks = new HashMap<>();
+    private final Set<UUID> timeoutAddedAfk = new HashSet<>();
     private static final long PVP_AFK_COOLDOWN_MILLIS = 60_000L;
     private final Map<UUID, TextColor> chatColours = new ConcurrentHashMap<>();
     private final HttpClient notificationClient = HttpClient.newBuilder()
@@ -240,71 +245,7 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
         }, 1L, 10L);
 
         Objects.requireNonNull(getCommand("app")).setExecutor((sender, command, label, args) -> {
-            if (!sender.hasPermission("argonapplications.admin")) {
-                sender.sendMessage("No permission.");
-                return true;
-            }
-            if (args.length == 0 || args[0].equalsIgnoreCase("list")) {
-                sender.sendMessage("Pending: " + (data.getConfigurationSection("pending") == null
-                        ? "[]" : data.getConfigurationSection("pending").getKeys(false)));
-                return true;
-            }
-            if (args.length < 2) {
-                sender.sendMessage("/app approve|whitelist|remove|reject <player> | /app decline <player> <reason>");
-                return true;
-            }
-
-            if (args[0].equalsIgnoreCase("decline") && args.length < 3) {
-                sender.sendMessage("Usage: /app decline <player> <reason>");
-                return true;
-            }
-
-            OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
-            UUID id = target.getUniqueId();
-            if (args[0].equalsIgnoreCase("approve") || args[0].equalsIgnoreCase("whitelist")) {
-                approved.add(id);
-                data.set("declined." + id, null);
-                saveData();
-                Player online = Bukkit.getPlayer(id);
-                if (online != null) {
-                    release(online);
-                }
-                sender.sendMessage("Added " + target.getName() + " to the Argon player whitelist.");
-             } else if (args[0].equalsIgnoreCase("remove")) {
-                approved.remove(id);
-                data.set("pending." + id, null);
-                saveData();
-                Player online = Bukkit.getPlayer(id);
-                if (online != null) begin(online);
-                sender.sendMessage("Removed " + target.getName() + " from the Argon whitelist.");
-            } else if (args[0].equalsIgnoreCase("decline")) {
-                String reason = String.join(" ", Arrays.copyOfRange(args, 2, args.length)).trim();
-                if (reason.isBlank()) {
-                    sender.sendMessage("Usage: /app decline <player> <reason>");
-                    return true;
-                }
-                if (reason.length() > 220) {
-                    sender.sendMessage("The decline reason must be 220 characters or fewer.");
-                    return true;
-                }
-                data.set("declined." + id + ".reason", reason);
-                data.set("declined." + id + ".player", target.getName());
-                data.set("declined." + id + ".declinedAt", System.currentTimeMillis());
-                saveData();
-                Player online = Bukkit.getPlayer(id);
-                if (online != null) {
-                    stages.remove(id);
-                    stopNamePrompt(id);
-                    showRejectedTitle(online, reason);
-                }
-                sender.sendMessage("Declined " + (target.getName() == null ? args[1] : target.getName()) + "'s application.");
-            } else if (args[0].equalsIgnoreCase("reject")) {
-                data.set("pending." + id, null);
-                saveData();
-                sender.sendMessage("Removed application for " + target.getName());
-            } else {
-                sender.sendMessage("/app approve|whitelist|remove|reject <player>");
-            }
+            handleAppCommand(sender, args);
             return true;
         });
 
@@ -392,16 +333,6 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
                 player.sendMessage("You do not need to submit an application.");
                 return true;
             }
-            String declinedReason = data.getString("declined." + id + ".reason", "");
-            if (declinedReason != null && !declinedReason.isBlank()) {
-                player.sendMessage("Your application has been declined.");
-                return true;
-            }
-            String existingName = data.getString("pending." + id + ".firstName", "");
-            if (existingName != null && !existingName.isBlank()) {
-                player.sendMessage("Your name has already been submitted.");
-                return true;
-            }
             if (args.length == 0) {
                 player.sendMessage("Usage: /send <your real first name>");
                 return true;
@@ -413,6 +344,18 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
                 return true;
             }
 
+            int limit = getDailyLimit(id);
+            int used = getDailyRequestsUsed(id);
+            if (used >= limit) {
+                player.sendActionBar(limitReachedActionBar(id));
+                player.sendMessage(Component.text(
+                        "You've reached your daily application request limit. Come back tomorrow or ask the elites to raise it.",
+                        NamedTextColor.RED
+                ));
+                return true;
+            }
+
+            recordApplicationRequest(id);
             String key = "pending." + id;
             data.set(key + ".player", player.getName());
             data.set(key + ".firstName", realName);
@@ -424,14 +367,17 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
 
             sendApplicationNotification(player, realName, submittedAt, bedrockPlayer);
 
-            stages.remove(id);
-            stopNamePrompt(id);
+            stages.put(id, "name");
+            startNamePrompt(player);
             player.showTitle(Title.title(
-                    Component.text("APPLICATION SENT", NamedTextColor.GREEN),
-                    Component.text("You can explore while staff review your application.", NamedTextColor.WHITE),
-                    Title.Times.times(Duration.ofMillis(200), Duration.ofSeconds(4), Duration.ofMillis(500))
+                    Component.text("just gotta wait...", NamedTextColor.YELLOW, TextDecoration.BOLD),
+                    Component.empty(),
+                    Title.Times.times(Duration.ofMillis(200), Duration.ofSeconds(5), Duration.ofMillis(500))
             ));
-            player.sendMessage("Application submitted. You can keep exploring while staff review it.");
+            player.sendMessage(Component.text(
+                    "now just wait until the elites verify you're not a chinese spy...",
+                    NamedTextColor.YELLOW
+            ));
             return true;
         });
     }
@@ -579,14 +525,6 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
             player.removePotionEffect(effect.getType());
         }
         clearMobTargets(player);
-        String declinedReason = data.getString("declined." + id + ".reason", "");
-        if (declinedReason != null && !declinedReason.isBlank()) {
-            stages.remove(id);
-            stopNamePrompt(id);
-            showRejectedTitle(player, declinedReason);
-            return;
-        }
-
         player.showTitle(Title.title(
                 Component.text("READ CHAT!", NamedTextColor.GOLD, TextDecoration.BOLD),
                 Component.empty(),
@@ -594,15 +532,13 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
         ));
 
         String submittedName = data.getString(key + ".firstName", "");
-        if (submittedName != null && !submittedName.isBlank()) {
-            stages.remove(id);
-            stopNamePrompt(id);
-            player.sendMessage("Your application is pending staff approval. You can keep exploring.");
-        } else {
-            stages.put(id, "name");
+        stages.put(id, "name");
+        if (submittedName == null || submittedName.isBlank()) {
             showNamePrompt(player);
-            startNamePrompt(player);
+        } else {
+            player.sendMessage("Your application is pending staff approval. You can keep exploring.");
         }
+        startNamePrompt(player);
     }
 
     private void showNamePrompt(Player player) {
@@ -626,15 +562,18 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
         stopNamePrompt(id);
         BukkitTask task = Bukkit.getScheduler().runTaskTimer(this, () -> {
             Player online = Bukkit.getPlayer(id);
-            if (online == null || !online.isOnline() || !"name".equals(stages.get(id))) {
+            if (online == null || !online.isOnline() || !pending(online)) {
                 stopNamePrompt(id);
                 return;
             }
-            online.sendActionBar(Component.text(
-                    "Use /send (your name)",
-                    NamedTextColor.GOLD
-            ));
-        }, 100L, 100L);
+            if (!timeouts.containsKey(id)) {
+                int limit = getDailyLimit(id);
+                int used = getDailyRequestsUsed(id);
+                online.sendActionBar(used >= limit
+                        ? limitReachedActionBar(id)
+                        : Component.text("Use /send (your name)", NamedTextColor.YELLOW));
+            }
+        }, 20L, 100L);
         promptTasks.put(id, task);
     }
 
@@ -694,6 +633,13 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
                     // Every unapproved player uses the application lobby, not just first-time joiners.
                     begin(player);
                 }
+                long timeoutUntil = data.getLong("timeouts." + player.getUniqueId() + ".until", 0L);
+                if (timeoutUntil > System.currentTimeMillis()) {
+                    activateTimeout(player, timeoutUntil, false);
+                } else if (timeoutUntil > 0L) {
+                    data.set("timeouts." + player.getUniqueId(), null);
+                    saveData();
+                }
             }
         }.runTaskLater(this, 2L);
     }
@@ -701,7 +647,7 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
     @EventHandler
     public void afkMovement(org.bukkit.event.player.PlayerMoveEvent event) {
         UUID id = event.getPlayer().getUniqueId();
-        if (!afk.contains(id) || event.getTo() == null) return;
+        if (!afk.contains(id) || timeouts.containsKey(id) || event.getTo() == null) return;
         org.bukkit.Location origin = afkOrigins.get(id);
         if (origin == null) {
             afkOrigins.put(id, event.getFrom().clone());
@@ -718,8 +664,10 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
     @EventHandler
     public void quit(PlayerQuitEvent event) {
         afkOrigins.remove(event.getPlayer().getUniqueId());
-        afk.remove(event.getPlayer().getUniqueId());
         UUID id = event.getPlayer().getUniqueId();
+        if (!timeouts.containsKey(id)) afk.remove(id);
+        BukkitTask timeoutTask = timeoutTasks.remove(id);
+        if (timeoutTask != null) timeoutTask.cancel();
         stages.remove(id);
         stopNamePrompt(id);
     }
@@ -799,7 +747,30 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void timeoutMovement(PlayerMoveEvent event) {
+        if (!timeouts.containsKey(event.getPlayer().getUniqueId()) || event.getTo() == null) return;
+        Location from = event.getFrom();
+        Location to = event.getTo();
+        if (!Objects.equals(from.getWorld(), to.getWorld())
+                || from.getX() != to.getX() || from.getY() != to.getY() || from.getZ() != to.getZ()) {
+            event.setTo(new Location(from.getWorld(), from.getX(), from.getY(), from.getZ(),
+                    to.getYaw(), to.getPitch()));
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void timeoutChat(AsyncChatEvent event) {
+        if (timeouts.containsKey(event.getPlayer().getUniqueId())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void pendingTeleport(PlayerTeleportEvent event) {
+        if (timeouts.containsKey(event.getPlayer().getUniqueId())) {
+            event.setCancelled(true);
+            return;
+        }
         if (pending(event.getPlayer())) {
             event.setCancelled(true);
         }
@@ -886,14 +857,15 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
 
     @EventHandler
     public void drop(PlayerDropItemEvent event) {
-        if (pending(event.getPlayer())) {
+        if (pending(event.getPlayer()) || timeouts.containsKey(event.getPlayer().getUniqueId())) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler
     public void pickup(EntityPickupItemEvent event) {
-        if (event.getEntity() instanceof Player player && pending(player)) {
+        if (event.getEntity() instanceof Player player
+                && (pending(player) || timeouts.containsKey(player.getUniqueId()))) {
             event.setCancelled(true);
         }
     }
@@ -901,6 +873,10 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
     @EventHandler
     public void command(PlayerCommandPreprocessEvent event) {
         Player player = event.getPlayer();
+        if (timeouts.containsKey(player.getUniqueId())) {
+            event.setCancelled(true);
+            return;
+        }
         if (!pending(player)) {
             return;
         }
@@ -910,16 +886,42 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
         }
     }
 
+    private ItemStack[] readItemStackArray(String path, int expectedSize) {
+        Object raw = data.get(path);
+        if (raw instanceof ItemStack[] items) {
+            return Arrays.copyOf(items, items.length);
+        }
+        if (raw instanceof List<?> list) {
+            if (list.size() > expectedSize) return null;
+            ItemStack[] items = new ItemStack[expectedSize];
+            for (int i = 0; i < list.size(); i++) {
+                Object value = list.get(i);
+                if (value != null && !(value instanceof ItemStack)) return null;
+                items[i] = (ItemStack) value;
+            }
+            return items;
+        }
+        return null;
+    }
+
     private void restorePlayerState(Player player) {
         String key = "pending." + player.getUniqueId();
         if (data.contains(key + ".saved")) {
-            Object inventory = data.get(key + ".saved");
-            if (inventory instanceof ItemStack[] items) {
-                player.getInventory().setContents(items);
+            ItemStack[] contents = readItemStackArray(key + ".saved", player.getInventory().getSize());
+            ItemStack[] armor = readItemStackArray(key + ".armor", 4);
+            boolean restored = contents != null;
+            if (contents != null) {
+                player.getInventory().setContents(contents);
+            } else {
+                getLogger().severe("Could not restore saved inventory for " + player.getName()
+                        + ": saved inventory data has an unsupported format. Preserving backup in applications.yml.");
             }
-            Object armor = data.get(key + ".armor");
-            if (armor instanceof ItemStack[] items) {
-                player.getInventory().setArmorContents(items);
+            if (armor != null) {
+                player.getInventory().setArmorContents(armor);
+            } else if (data.contains(key + ".armor")) {
+                restored = false;
+                getLogger().severe("Could not restore saved armour for " + player.getName()
+                        + ": saved armour data has an unsupported format. Preserving backup in applications.yml.");
             }
             ItemStack offhand = data.getItemStack(key + ".offhand");
             player.getInventory().setItemInOffHand(offhand);
@@ -929,8 +931,10 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
             } catch (IllegalArgumentException ignored) {
                 player.setGameMode(GameMode.SURVIVAL);
             }
-            data.set(key, null);
-            saveData();
+            if (restored) {
+                data.set(key, null);
+                saveData();
+            }
         }
 
         stages.remove(player.getUniqueId());
@@ -945,5 +949,244 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
                 Component.empty(),
                 Title.Times.times(Duration.ofMillis(250), Duration.ofSeconds(5), Duration.ofMillis(500))
         ));
+    }
+
+    private String todayKey() {
+        return LocalDate.now(ZoneId.systemDefault()).toString();
+    }
+
+    private int getDailyLimit(UUID id) {
+        return Math.max(0, data.getInt("application-limits." + id + ".daily-limit", 3));
+    }
+
+    private int getDailyRequestsUsed(UUID id) {
+        String base = "application-limits." + id;
+        if (!todayKey().equals(data.getString(base + ".date", ""))) return 0;
+        return Math.max(0, data.getInt(base + ".count", 0));
+    }
+
+    private void recordApplicationRequest(UUID id) {
+        String base = "application-limits." + id;
+        int used = getDailyRequestsUsed(id);
+        data.set(base + ".date", todayKey());
+        data.set(base + ".count", used + 1);
+        saveData();
+    }
+
+    private Component limitReachedActionBar(UUID id) {
+        int limit = getDailyLimit(id);
+        return Component.text("limit of " + limit + " /send requests reached. ", NamedTextColor.RED)
+                .append(Component.text(
+                        "Come back tomorrow or let the elites know so they can omit the limit",
+                        NamedTextColor.YELLOW
+                ));
+    }
+
+    private void handleAppCommand(org.bukkit.command.CommandSender sender, String[] args) {
+        if (!sender.hasPermission("argonapplications.admin")) {
+            sender.sendMessage("No permission.");
+            return;
+        }
+        if (args.length == 0 || args[0].equalsIgnoreCase("list")) {
+            sender.sendMessage("Pending: " + (data.getConfigurationSection("pending") == null
+                    ? "[]" : data.getConfigurationSection("pending").getKeys(false)));
+            return;
+        }
+
+        String action = args[0].toLowerCase(Locale.ROOT);
+        if (args.length < 2) {
+            sender.sendMessage("Usage: /app approve|remove|reject|decline|resetlimit|addlimit|timeout <player> [value]");
+            return;
+        }
+
+        OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
+        UUID id = target.getUniqueId();
+        String displayName = target.getName() == null ? args[1] : target.getName();
+
+        if (action.equals("resetlimit")) {
+            String base = "application-limits." + id;
+            data.set(base + ".date", todayKey());
+            data.set(base + ".count", 0);
+            saveData();
+            sender.sendMessage("Reset today's /send usage for " + displayName + ". They can use up to "
+                    + getDailyLimit(id) + " requests today.");
+            Player online = Bukkit.getPlayer(id);
+            if (online != null && pending(online)) startNamePrompt(online);
+            return;
+        }
+
+        if (action.equals("addlimit")) {
+            if (args.length != 3) {
+                sender.sendMessage("Usage: /app addlimit <player> <daily request limit>");
+                return;
+            }
+            int newLimit;
+            try {
+                newLimit = Integer.parseInt(args[2]);
+            } catch (NumberFormatException exception) {
+                sender.sendMessage("The daily limit must be a whole number greater than zero.");
+                return;
+            }
+            if (newLimit < 1 || newLimit > 100000) {
+                sender.sendMessage("The daily limit must be between 1 and 100000.");
+                return;
+            }
+            data.set("application-limits." + id + ".daily-limit", newLimit);
+            saveData();
+            sender.sendMessage("Set " + displayName + "'s daily /send limit to " + newLimit + ".");
+            Player online = Bukkit.getPlayer(id);
+            if (online != null && pending(online)) startNamePrompt(online);
+            return;
+        }
+
+        if (action.equals("timeout")) {
+            if (args.length != 3) {
+                sender.sendMessage("Usage: /app timeout <player> <seconds>");
+                return;
+            }
+            long seconds;
+            try {
+                seconds = Long.parseLong(args[2]);
+            } catch (NumberFormatException exception) {
+                sender.sendMessage("Timeout must be a whole number of seconds greater than zero.");
+                return;
+            }
+            if (seconds < 1 || seconds > 2147483L) {
+                sender.sendMessage("Timeout must be between 1 second and 24 days.");
+                return;
+            }
+            long until = System.currentTimeMillis() + seconds * 1000L;
+            data.set("timeouts." + id + ".until", until);
+            saveData();
+            Player online = Bukkit.getPlayer(id);
+            if (online != null) activateTimeout(online, until, true);
+            sender.sendMessage("Timed out " + displayName + " for " + formatDuration(seconds * 1000L) + ".");
+            return;
+        }
+
+        if (action.equals("decline") && args.length < 3) {
+            sender.sendMessage("Usage: /app decline <player> <reason>");
+            return;
+        }
+
+        if (action.equals("approve") || action.equals("whitelist")) {
+            approved.add(id);
+            data.set("declined." + id, null);
+            saveData();
+            Player online = Bukkit.getPlayer(id);
+            if (online != null) release(online);
+            sender.sendMessage("Added " + displayName + " to the Argon player whitelist.");
+        } else if (action.equals("remove")) {
+            approved.remove(id);
+            data.set("declined." + id, null);
+            data.set("pending." + id, null);
+            saveData();
+            Player online = Bukkit.getPlayer(id);
+            if (online != null) begin(online);
+            sender.sendMessage("Removed " + displayName + " from the Argon whitelist. They can apply again.");
+        } else if (action.equals("decline")) {
+            String reason = String.join(" ", Arrays.copyOfRange(args, 2, args.length)).trim();
+            if (reason.isBlank()) {
+                sender.sendMessage("Usage: /app decline <player> <reason>");
+                return;
+            }
+            if (reason.length() > 220) {
+                sender.sendMessage("The decline reason must be 220 characters or fewer.");
+                return;
+            }
+            data.set("declined." + id + ".reason", reason);
+            data.set("declined." + id + ".player", displayName);
+            data.set("declined." + id + ".declinedAt", System.currentTimeMillis());
+            data.set("pending." + id + ".firstName", null);
+            data.set("pending." + id + ".submitted", null);
+            saveData();
+            Player online = Bukkit.getPlayer(id);
+            if (online != null) {
+                stages.put(id, "name");
+                showRejectedTitle(online, reason);
+                online.sendMessage(Component.text(
+                        "You can submit another application with /send (your name), subject to today's limit.",
+                        NamedTextColor.YELLOW
+                ));
+                startNamePrompt(online);
+            }
+            sender.sendMessage("Declined " + displayName + "'s application. They may reapply within their daily limit.");
+        } else if (action.equals("reject")) {
+            data.set("pending." + id + ".firstName", null);
+            data.set("pending." + id + ".submitted", null);
+            saveData();
+            Player online = Bukkit.getPlayer(id);
+            if (online != null && pending(online)) startNamePrompt(online);
+            sender.sendMessage("Cleared " + displayName + "'s application. They may apply again.");
+        } else {
+            sender.sendMessage("Usage: /app approve|remove|reject|decline|resetlimit|addlimit|timeout <player> [value]");
+        }
+    }
+
+    private void activateTimeout(Player player, long until, boolean showTitle) {
+        UUID id = player.getUniqueId();
+        if (until <= System.currentTimeMillis()) {
+            finishTimeout(player);
+            return;
+        }
+        if (afk.add(id)) timeoutAddedAfk.add(id);
+        afkOrigins.putIfAbsent(id, player.getLocation().clone());
+        timeouts.put(id, until);
+        clearMobTargets(player);
+        player.setVelocity(new org.bukkit.util.Vector(0, 0, 0));
+        stopNamePrompt(id);
+        if (showTitle) {
+            player.showTitle(Title.title(
+                    Component.text("timeout bro", NamedTextColor.RED, TextDecoration.BOLD),
+                    Component.empty(),
+                    Title.Times.times(Duration.ofMillis(100), Duration.ofSeconds(4), Duration.ofMillis(300))
+            ));
+        }
+        player.sendActionBar(Component.text("timeout for: " + formatDuration(until - System.currentTimeMillis()),
+                NamedTextColor.YELLOW));
+
+        BukkitTask oldTask = timeoutTasks.remove(id);
+        if (oldTask != null) oldTask.cancel();
+        BukkitTask task = Bukkit.getScheduler().runTaskTimer(this, () -> {
+            Player online = Bukkit.getPlayer(id);
+            Long expiry = timeouts.get(id);
+            if (online == null || expiry == null) {
+                BukkitTask current = timeoutTasks.remove(id);
+                if (current != null) current.cancel();
+                return;
+            }
+            long remaining = expiry - System.currentTimeMillis();
+            if (remaining <= 0L) {
+                finishTimeout(online);
+            } else {
+                online.sendActionBar(Component.text("timeout for: " + formatDuration(remaining),
+                        NamedTextColor.YELLOW));
+            }
+        }, 20L, 20L);
+        timeoutTasks.put(id, task);
+    }
+
+    private void finishTimeout(Player player) {
+        UUID id = player.getUniqueId();
+        timeouts.remove(id);
+        data.set("timeouts." + id, null);
+        saveData();
+        BukkitTask task = timeoutTasks.remove(id);
+        if (task != null) task.cancel();
+        if (timeoutAddedAfk.remove(id)) {
+            afk.remove(id);
+            afkOrigins.remove(id);
+        }
+        player.sendActionBar(Component.empty());
+        if (pending(player)) startNamePrompt(player);
+        player.sendMessage(Component.text("Your timeout has ended.", NamedTextColor.YELLOW));
+    }
+
+    private String formatDuration(long millis) {
+        long totalSeconds = Math.max(0L, (millis + 999L) / 1000L);
+        long hours = totalSeconds / 3600L;
+        long minutes = (totalSeconds % 3600L) / 60L;
+        long seconds = totalSeconds % 60L;
+        return String.format(Locale.ROOT, "%02d:%02d:%02d", hours, minutes, seconds);
     }
 }
