@@ -3,6 +3,7 @@ package com.argon.applications;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.title.Title;
 import org.bukkit.*;
@@ -52,27 +53,123 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
             "black", "dark_blue", "dark_green", "dark_aqua",
             "dark_red", "dark_purple", "gold", "gray",
             "dark_gray", "blue", "green", "aqua",
-            "red", "light_purple", "yellow", "white"
+            "red", "light_purple", "yellow", "white",
+            "pink", "light_pink", "hot_pink", "deep_pink", "pale_pink", "blush",
+            "rose", "dusty_rose", "coral", "light_coral", "salmon", "peach",
+            "apricot", "orange", "dark_orange", "amber", "tangerine", "lemon",
+            "mustard", "lime", "chartreuse", "olive", "mint", "mint_green",
+            "seafoam", "sage", "pastel_green", "emerald", "jade", "forest_green",
+            "spring_green", "teal", "turquoise", "aquamarine", "cyan", "ice_blue",
+            "sky_blue", "baby_blue", "powder_blue", "steel_blue", "royal_blue", "dodger_blue",
+            "navy", "midnight_blue", "indigo", "periwinkle", "lavender", "lilac",
+            "violet", "purple", "plum", "orchid", "magenta", "fuchsia",
+            "grape", "burgundy", "maroon", "crimson", "ruby", "scarlet",
+            "brick_red", "chocolate", "coffee", "caramel", "tan", "beige",
+            "cream", "ivory", "sand", "taupe", "slate", "charcoal",
+            "graphite", "silver", "platinum", "rose_gold", "copper", "bronze"
     );
 
-    private static final Map<String, NamedTextColor> CHAT_COLOURS = Map.ofEntries(
-            Map.entry("black", NamedTextColor.BLACK),
-            Map.entry("dark_blue", NamedTextColor.DARK_BLUE),
-            Map.entry("dark_green", NamedTextColor.DARK_GREEN),
-            Map.entry("dark_aqua", NamedTextColor.DARK_AQUA),
-            Map.entry("dark_red", NamedTextColor.DARK_RED),
-            Map.entry("dark_purple", NamedTextColor.DARK_PURPLE),
-            Map.entry("gold", NamedTextColor.GOLD),
-            Map.entry("gray", NamedTextColor.GRAY),
-            Map.entry("dark_gray", NamedTextColor.DARK_GRAY),
-            Map.entry("blue", NamedTextColor.BLUE),
-            Map.entry("green", NamedTextColor.GREEN),
-            Map.entry("aqua", NamedTextColor.AQUA),
-            Map.entry("red", NamedTextColor.RED),
-            Map.entry("light_purple", NamedTextColor.LIGHT_PURPLE),
-            Map.entry("yellow", NamedTextColor.YELLOW),
-            Map.entry("white", NamedTextColor.WHITE)
-    );
+    private static final Map<String, TextColor> CHAT_COLOURS = createChatColours();
+
+    private static Map<String, TextColor> createChatColours() {
+        Map<String, TextColor> colours = new LinkedHashMap<>();
+        colours.put("black", NamedTextColor.BLACK);
+        colours.put("dark_blue", NamedTextColor.DARK_BLUE);
+        colours.put("dark_green", NamedTextColor.DARK_GREEN);
+        colours.put("dark_aqua", NamedTextColor.DARK_AQUA);
+        colours.put("dark_red", NamedTextColor.DARK_RED);
+        colours.put("dark_purple", NamedTextColor.DARK_PURPLE);
+        colours.put("gold", NamedTextColor.GOLD);
+        colours.put("gray", NamedTextColor.GRAY);
+        colours.put("dark_gray", NamedTextColor.DARK_GRAY);
+        colours.put("blue", NamedTextColor.BLUE);
+        colours.put("green", NamedTextColor.GREEN);
+        colours.put("aqua", NamedTextColor.AQUA);
+        colours.put("red", NamedTextColor.RED);
+        colours.put("light_purple", NamedTextColor.LIGHT_PURPLE);
+        colours.put("yellow", NamedTextColor.YELLOW);
+        colours.put("white", NamedTextColor.WHITE);
+
+        colours.put("pink", TextColor.color(0xFFC0CB));
+        colours.put("light_pink", TextColor.color(0xFFB6C1));
+        colours.put("hot_pink", TextColor.color(0xFF69B4));
+        colours.put("deep_pink", TextColor.color(0xFF1493));
+        colours.put("pale_pink", TextColor.color(0xFADADD));
+        colours.put("blush", TextColor.color(0xDE5D83));
+        colours.put("rose", TextColor.color(0xFF007F));
+        colours.put("dusty_rose", TextColor.color(0xDCAE96));
+        colours.put("coral", TextColor.color(0xFF7F50));
+        colours.put("light_coral", TextColor.color(0xF08080));
+        colours.put("salmon", TextColor.color(0xFA8072));
+        colours.put("peach", TextColor.color(0xFFE5B4));
+        colours.put("apricot", TextColor.color(0xFBCEB1));
+        colours.put("orange", TextColor.color(0xFFA500));
+        colours.put("dark_orange", TextColor.color(0xFF8C00));
+        colours.put("amber", TextColor.color(0xFFBF00));
+        colours.put("tangerine", TextColor.color(0xF28500));
+        colours.put("lemon", TextColor.color(0xFFF44F));
+        colours.put("mustard", TextColor.color(0xFFDB58));
+        colours.put("lime", TextColor.color(0xBFFF00));
+        colours.put("chartreuse", TextColor.color(0x7FFF00));
+        colours.put("olive", TextColor.color(0x808000));
+        colours.put("mint", TextColor.color(0x98FF98));
+        colours.put("mint_green", TextColor.color(0xAAF0D1));
+        colours.put("seafoam", TextColor.color(0x93E9BE));
+        colours.put("sage", TextColor.color(0x9CAF88));
+        colours.put("pastel_green", TextColor.color(0xC1E1C1));
+        colours.put("emerald", TextColor.color(0x50C878));
+        colours.put("jade", TextColor.color(0x00A86B));
+        colours.put("forest_green", TextColor.color(0x228B22));
+        colours.put("spring_green", TextColor.color(0x00FF7F));
+        colours.put("teal", TextColor.color(0x008080));
+        colours.put("turquoise", TextColor.color(0x40E0D0));
+        colours.put("aquamarine", TextColor.color(0x7FFFD4));
+        colours.put("cyan", TextColor.color(0x00FFFF));
+        colours.put("ice_blue", TextColor.color(0xD7F3F5));
+        colours.put("sky_blue", TextColor.color(0x87CEEB));
+        colours.put("baby_blue", TextColor.color(0x89CFF0));
+        colours.put("powder_blue", TextColor.color(0xB0E0E6));
+        colours.put("steel_blue", TextColor.color(0x4682B4));
+        colours.put("royal_blue", TextColor.color(0x4169E1));
+        colours.put("dodger_blue", TextColor.color(0x1E90FF));
+        colours.put("navy", TextColor.color(0x000080));
+        colours.put("midnight_blue", TextColor.color(0x191970));
+        colours.put("indigo", TextColor.color(0x4B0082));
+        colours.put("periwinkle", TextColor.color(0xCCCCFF));
+        colours.put("lavender", TextColor.color(0xE6E6FA));
+        colours.put("lilac", TextColor.color(0xC8A2C8));
+        colours.put("violet", TextColor.color(0x8F00FF));
+        colours.put("purple", TextColor.color(0x800080));
+        colours.put("plum", TextColor.color(0xDDA0DD));
+        colours.put("orchid", TextColor.color(0xDA70D6));
+        colours.put("magenta", TextColor.color(0xFF00FF));
+        colours.put("fuchsia", TextColor.color(0xFF00FF));
+        colours.put("grape", TextColor.color(0x6F2DA8));
+        colours.put("burgundy", TextColor.color(0x800020));
+        colours.put("maroon", TextColor.color(0x800000));
+        colours.put("crimson", TextColor.color(0xDC143C));
+        colours.put("ruby", TextColor.color(0xE0115F));
+        colours.put("scarlet", TextColor.color(0xFF2400));
+        colours.put("brick_red", TextColor.color(0xCB4154));
+        colours.put("chocolate", TextColor.color(0x7B3F00));
+        colours.put("coffee", TextColor.color(0x6F4E37));
+        colours.put("caramel", TextColor.color(0xC68E17));
+        colours.put("tan", TextColor.color(0xD2B48C));
+        colours.put("beige", TextColor.color(0xF5F5DC));
+        colours.put("cream", TextColor.color(0xFFFDD0));
+        colours.put("ivory", TextColor.color(0xFFFFF0));
+        colours.put("sand", TextColor.color(0xC2B280));
+        colours.put("taupe", TextColor.color(0x483C32));
+        colours.put("slate", TextColor.color(0x708090));
+        colours.put("charcoal", TextColor.color(0x36454F));
+        colours.put("graphite", TextColor.color(0x383838));
+        colours.put("silver", TextColor.color(0xC0C0C0));
+        colours.put("platinum", TextColor.color(0xE5E4E2));
+        colours.put("rose_gold", TextColor.color(0xB76E79));
+        colours.put("copper", TextColor.color(0xB87333));
+        colours.put("bronze", TextColor.color(0xCD7F32));
+        return Collections.unmodifiableMap(colours);
+    }
 
     private YamlConfiguration data;
     private File dataFile;
@@ -120,7 +217,7 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
             for (String id : data.getConfigurationSection("chat-colours").getKeys(false)) {
                 try {
                     String name = data.getString("chat-colours." + id, "").toLowerCase(Locale.ROOT);
-                    NamedTextColor colour = CHAT_COLOURS.get(name);
+                    TextColor colour = CHAT_COLOURS.get(name);
                     if (colour != null) {
                         chatColours.put(UUID.fromString(id), colour);
                     }
@@ -247,8 +344,12 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
                 return true;
             }
             if (args.length == 0) {
-                player.sendMessage("Available chat colours (Java + Bedrock): " + String.join(", ", CHAT_COLOUR_NAMES));
-                player.sendMessage("Usage: /colour <colour>");
+                player.sendMessage("Available chat-name colours (RGB palette):");
+                for (int start = 0; start < CHAT_COLOUR_NAMES.size(); start += 20) {
+                    int end = Math.min(start + 20, CHAT_COLOUR_NAMES.size());
+                    player.sendMessage(String.join(", ", CHAT_COLOUR_NAMES.subList(start, end)));
+                }
+                player.sendMessage("Usage: /colour <colour> (also /color, /colours, /colors)");
                 return true;
             }
             if (args.length != 1) {
@@ -257,7 +358,7 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
             }
 
             String colourName = args[0].toLowerCase(Locale.ROOT);
-            NamedTextColor colour = CHAT_COLOURS.get(colourName);
+            TextColor colour = CHAT_COLOURS.get(colourName);
             if (colour == null) {
                 player.sendMessage("Unknown colour. Available: " + String.join(", ", CHAT_COLOUR_NAMES));
                 return true;
@@ -540,11 +641,11 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
 
     private NamedTextColor ensureChatColour(Player player) {
         UUID id = player.getUniqueId();
-        NamedTextColor existing = chatColours.get(id);
+        TextColor existing = chatColours.get(id);
         if (existing != null) return existing;
 
         String name = CHAT_COLOUR_NAMES.get(new Random().nextInt(CHAT_COLOUR_NAMES.size()));
-        NamedTextColor selected = CHAT_COLOURS.get(name);
+        TextColor selected = CHAT_COLOURS.get(name);
         chatColours.put(id, selected);
         data.set("chat-colours." + id, name);
         saveData();
@@ -553,7 +654,7 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
 
     @EventHandler
     public void chatNameColour(AsyncChatEvent event) {
-        NamedTextColor colour = chatColours.getOrDefault(event.getPlayer().getUniqueId(), NamedTextColor.WHITE);
+        TextColor colour = chatColours.getOrDefault(event.getPlayer().getUniqueId(), NamedTextColor.WHITE);
         event.renderer((source, sourceDisplayName, message, viewer) ->
                 Component.text(source.getName(), colour)
                         .append(Component.text(": ", NamedTextColor.GRAY))
