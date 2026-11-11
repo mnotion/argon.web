@@ -31,7 +31,6 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
-        saveDefaultConfig();
         dataFile = new File(getDataFolder(), "applications.yml");
         if (!dataFile.exists()) {
             try {
@@ -97,8 +96,9 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
                 player.sendMessage("You do not need to submit an application.");
                 return true;
             }
-            if (!"name".equals(stages.get(id))) {
-                player.sendMessage("Your application name has already been submitted, or the application lobby is still loading.");
+            String existingName = data.getString("pending." + id + ".firstName", "");
+            if (existingName != null && !existingName.isBlank()) {
+                player.sendMessage("Your name has already been submitted.");
                 return true;
             }
             if (args.length == 0) {
@@ -123,10 +123,10 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
             stopNamePrompt(id);
             player.showTitle(Title.title(
                     Component.text("APPLICATION SENT", NamedTextColor.GREEN),
-                    Component.text("Parkour is now unlocked. Wait for staff approval.", NamedTextColor.WHITE),
+                    Component.text("You can explore while staff review your application.", NamedTextColor.WHITE),
                     Title.Times.times(Duration.ofMillis(200), Duration.ofSeconds(4), Duration.ofMillis(500))
             ));
-            player.sendMessage("Application submitted. You can now parkour in the lobby while staff review it.");
+            player.sendMessage("Application submitted. You can keep exploring while staff review it.");
             return true;
         });
     }
@@ -149,14 +149,6 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
     }
 
     private void begin(Player player) {
-        String lobbyName = getConfig().getString("lobby-world", "application_lobby");
-        World lobby = Bukkit.getWorld(lobbyName);
-        if (lobby == null) {
-            player.sendMessage("Application lobby world is missing: " + lobbyName);
-            getLogger().severe("Application lobby world is not loaded: " + lobbyName);
-            return;
-        }
-
         UUID id = player.getUniqueId();
         String key = "pending." + id;
 
@@ -179,16 +171,11 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
         player.setSaturation(20);
         player.setHealth(20);
 
-        Location spawn = lobby.getSpawnLocation();
-        Block platform = lobby.getBlockAt(spawn.getBlockX(), spawn.getBlockY() - 1, spawn.getBlockZ());
-        platform.setType(Material.BARRIER, false);
-        player.teleport(spawn);
-
         String submittedName = data.getString(key + ".firstName", "");
         if (submittedName != null && !submittedName.isBlank()) {
             stages.remove(id);
             stopNamePrompt(id);
-            player.sendMessage("Your application is pending staff approval. You can parkour while you wait.");
+            player.sendMessage("Your application is pending staff approval. You can keep exploring.");
         } else {
             stages.put(id, "name");
             showNamePrompt(player);
@@ -202,7 +189,7 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
                 Component.text("Type /send <your real first name>", NamedTextColor.WHITE),
                 Title.Times.times(Duration.ofMillis(200), Duration.ofSeconds(5), Duration.ofMillis(300))
         ));
-        player.sendMessage(Component.text("Before you can move, submit your real first name with: /send <name>", NamedTextColor.YELLOW));
+        player.sendMessage(Component.text("Submit your real first name with: /send <name>", NamedTextColor.YELLOW));
     }
 
     private void startNamePrompt(Player player) {
@@ -266,37 +253,6 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
         stopNamePrompt(id);
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void keepUnapprovedInLobby(PlayerTeleportEvent event) {
-        Player player = event.getPlayer();
-        if (!pending(player) || event.getTo() == null) {
-            return;
-        }
-        World lobby = Bukkit.getWorld(getConfig().getString("lobby-world", "application_lobby"));
-        if (lobby != null && event.getTo().getWorld() != lobby) {
-            event.setCancelled(true);
-        }
-    }
-
-    @EventHandler(priority = EventPriority.HIGHEST)
-    public void movement(PlayerMoveEvent event) {
-        if (!"name".equals(stages.get(event.getPlayer().getUniqueId()))) {
-            return;
-        }
-        Location from = event.getFrom();
-        Location to = event.getTo();
-        if (to == null) {
-            return;
-        }
-        boolean changedPosition = from.getX() != to.getX()
-                || from.getY() != to.getY()
-                || from.getZ() != to.getZ();
-        if (changedPosition) {
-            event.setTo(new Location(from.getWorld(), from.getX(), from.getY(), from.getZ(),
-                    to.getYaw(), to.getPitch()));
-        }
-    }
-
     @EventHandler
     public void damage(EntityDamageEvent event) {
         if (event.getEntity() instanceof Player player && pending(player)) {
@@ -305,10 +261,51 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
     }
 
     @EventHandler
-    public void chat(AsyncPlayerChatEvent event) {
-        if ("name".equals(stages.get(event.getPlayer().getUniqueId()))) {
+    public void interact(PlayerInteractEvent event) {
+        if (pending(event.getPlayer())) {
             event.setCancelled(true);
-            event.getPlayer().sendMessage("Use /send <your real first name>.");
+        }
+    }
+
+    @EventHandler
+    public void interactEntity(PlayerInteractEntityEvent event) {
+        if (pending(event.getPlayer())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void inventoryOpen(InventoryOpenEvent event) {
+        if (event.getPlayer() instanceof Player player && pending(player)) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void inventoryClick(InventoryClickEvent event) {
+        if (event.getWhoClicked() instanceof Player player && pending(player)) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void inventoryDrag(InventoryDragEvent event) {
+        if (event.getWhoClicked() instanceof Player player && pending(player)) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void swapHands(PlayerSwapHandItemsEvent event) {
+        if (pending(event.getPlayer())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void consume(PlayerItemConsumeEvent event) {
+        if (pending(event.getPlayer())) {
+            event.setCancelled(true);
         }
     }
 
@@ -392,16 +389,8 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
             player.setGameMode(GameMode.SURVIVAL);
         }
 
-        World survival = Bukkit.getWorld(getConfig().getString("survival-world", "jawaaa"));
-        if (survival == null) {
-            player.sendMessage("Survival world is missing: " + getConfig().getString("survival-world", "jawaaa"));
-            getLogger().severe("Survival world is not loaded: " + getConfig().getString("survival-world", "jawaaa"));
-            return;
-        }
         stages.remove(player.getUniqueId());
         stopNamePrompt(player.getUniqueId());
-        player.setGameMode(GameMode.SURVIVAL);
-        player.teleport(survival.getSpawnLocation());
     }
 
     private void release(Player player) {
