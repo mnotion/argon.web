@@ -4,7 +4,7 @@ Paper plugin for the Argon Minecraft server. It uses the server's existing world
 
 ## Player flow
 - Players who are **not on the Argon plugin whitelist** join in Adventure mode at the server's normal join location.
-- They can move around freely, but cannot interact with blocks or entities, open/use inventories, drop or pick up items, attack, or take damage.
+- They can only move around and use normal chat plus `/send` and name-colour commands. They cannot interact with blocks or entities, use inventories, drop or pick up items, attack or be attacked, take any damage (including drowning), receive potion/status effects, teleport, or be targeted by mobs.
 - Players who have not submitted their real first name see a repeating prompt to use `/send <real first name>`. Submitting it records the application; chat and movement remain available.
 - Players remain in the same world while staff review their application.
 - When staff approve a player with `/app approve <player>`, restrictions are lifted immediately if they are online. Their previously saved inventory and game mode are restored without teleporting them, and they see a large green `enjoy` title.
@@ -23,7 +23,7 @@ Paper plugin for the Argon Minecraft server. It uses the server's existing world
 - `/colour`, `/color`, `/colours`, or `/colors` lists 94 chat-name colours.
 - `/colour <colour>` changes only the colour of the player's name in chat. The colour is randomly assigned on first join and saved. The palette includes standard Minecraft colours and 78 additional RGB shades. Exact RGB shades are intended for Java; Bedrock clients using Geyser may display the nearest supported legacy shade.
 
-Unapproved players see a large `READ CHAT!` title when they join, followed by spaced instructions in chat. The reminder uses the action bar.
+Unapproved players see a large `READ CHAT!` title when they join, followed by spaced instructions in chat. The reminder uses the action bar. Existing potion effects are removed on entry; future potion/status effect additions are cancelled, all damage is cancelled, and nearby mobs are cleared of the player's target.
 
 ## Application email notifications
 When a pending player submits `/send <real first name>`, the plugin sends their submitted first name, Minecraft username, UUID, Java/Bedrock edition, submission time, server name and server version to the Supabase Edge Function. The function stores the application in the private `public.minecraft_applications` table and emails **argonmcadmin@gmail.com** through Resend. IP addresses are not collected.
