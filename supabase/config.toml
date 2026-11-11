@@ -1,0 +1,4 @@
+project_id = "mtonkduhblqamfoctmmh"
+
+[functions.argon-application-email]
+verify_jwt = false
