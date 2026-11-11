@@ -33,6 +33,7 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
     private final Map<UUID, BukkitTask> promptTasks = new HashMap<>();
     private final Set<UUID> approved = new HashSet<>();
     private final Set<UUID> afk = new HashSet<>();
+    private final Map<UUID, org.bukkit.Location> afkOrigins = new HashMap<>();
     private final Map<UUID, NamedTextColor> chatColours = new ConcurrentHashMap<>();
 
     private static final List<String> CHAT_COLOUR_NAMES = List.of(
@@ -159,9 +160,11 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
             }
             UUID id = player.getUniqueId();
             if (afk.remove(id)) {
+                afkOrigins.remove(id);
                 player.sendMessage("AFK protection disabled.");
             } else {
                 afk.add(id);
+                afkOrigins.put(id, player.getLocation().clone());
                 // Clear any mobs that had already selected this player before AFK was enabled.
                 for (org.bukkit.entity.Entity nearby : player.getNearbyEntities(64, 64, 64)) {
                     if (nearby instanceof org.bukkit.entity.Mob mob && player.equals(mob.getTarget())) {
@@ -402,7 +405,25 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
     }
 
     @EventHandler
+    public void afkMovement(org.bukkit.event.player.PlayerMoveEvent event) {
+        UUID id = event.getPlayer().getUniqueId();
+        if (!afk.contains(id) || event.getTo() == null) return;
+        org.bukkit.Location origin = afkOrigins.get(id);
+        if (origin == null) {
+            afkOrigins.put(id, event.getFrom().clone());
+            return;
+        }
+        // Two blocks of displacement in any direction automatically ends AFK mode.
+        if (event.getTo().distanceSquared(origin) >= 4.0) {
+            afk.remove(id);
+            afkOrigins.remove(id);
+            event.getPlayer().sendMessage("AFK protection disabled because you moved 2 blocks.");
+        }
+    }
+
+    @EventHandler
     public void quit(PlayerQuitEvent event) {
+        afkOrigins.remove(event.getPlayer().getUniqueId());
         afk.remove(event.getPlayer().getUniqueId());
         UUID id = event.getPlayer().getUniqueId();
         stages.remove(id);
