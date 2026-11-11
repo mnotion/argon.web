@@ -395,7 +395,7 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
     }
 
     private void release(Player player) {
-        enterSurvival(player);
+        restorePlayerState(player);
         player.sendMessage("You are whitelisted. Welcome to survival!");
     }
 }
