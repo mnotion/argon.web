@@ -41,6 +41,8 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
     private final Set<UUID> approved = new HashSet<>();
     private final Set<UUID> afk = new HashSet<>();
     private final Map<UUID, org.bukkit.Location> afkOrigins = new HashMap<>();
+    private final Map<UUID, Long> combatTags = new HashMap<>();
+    private static final long PVP_AFK_COOLDOWN_MILLIS = 60_000L;
     private final Map<UUID, NamedTextColor> chatColours = new ConcurrentHashMap<>();
     private final HttpClient notificationClient = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(5))
@@ -96,6 +98,24 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
             }
         }
 
+        if (data.getConfigurationSection("combat-tags") != null) {
+            long now = System.currentTimeMillis();
+            for (String id : data.getConfigurationSection("combat-tags").getKeys(false)) {
+                try {
+                    UUID playerId = UUID.fromString(id);
+                    long taggedAt = data.getLong("combat-tags." + id, 0L);
+                    if (taggedAt > 0L && now >= taggedAt && now - taggedAt < PVP_AFK_COOLDOWN_MILLIS) {
+                        combatTags.put(playerId, taggedAt);
+                    } else {
+                        data.set("combat-tags." + id, null);
+                    }
+                } catch (IllegalArgumentException ignored) {
+                    data.set("combat-tags." + id, null);
+                    getLogger().warning("Ignoring invalid combat tag UUID: " + id);
+                }
+            }
+        }
+
         if (data.getConfigurationSection("chat-colours") != null) {
             for (String id : data.getConfigurationSection("chat-colours").getKeys(false)) {
                 try {
@@ -133,7 +153,12 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
                 return true;
             }
             if (args.length < 2) {
-                sender.sendMessage("/app approve|remove|reject <player>");
+                sender.sendMessage("/app approve|whitelist|remove|reject <player> | /app decline <player> <reason>");
+                return true;
+            }
+
+            if (args[0].equalsIgnoreCase("decline") && args.length < 3) {
+                sender.sendMessage("Usage: /app decline <player> <reason>");
                 return true;
             }
 
@@ -141,6 +166,7 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
             UUID id = target.getUniqueId();
             if (args[0].equalsIgnoreCase("approve") || args[0].equalsIgnoreCase("whitelist")) {
                 approved.add(id);
+                data.set("declined." + id, null);
                 saveData();
                 Player online = Bukkit.getPlayer(id);
                 if (online != null) {
@@ -154,6 +180,23 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
                 Player online = Bukkit.getPlayer(id);
                 if (online != null) begin(online);
                 sender.sendMessage("Removed " + target.getName() + " from the Argon whitelist.");
+            } else if (args[0].equalsIgnoreCase("decline")) {
+                String reason = String.join(" ", Arrays.copyOfRange(args, 2, args.length)).trim();
+                if (reason.isBlank()) {
+                    sender.sendMessage("Usage: /app decline <player> <reason>");
+                    return true;
+                }
+                if (reason.length() > 220) {
+                    sender.sendMessage("The decline reason must be 220 characters or fewer.");
+                    return true;
+                }
+                data.set("declined." + id + ".reason", reason);
+                data.set("declined." + id + ".player", target.getName());
+                data.set("declined." + id + ".declinedAt", System.currentTimeMillis());
+                saveData();
+                Player online = Bukkit.getPlayer(id);
+                if (online != null) showRejectedTitle(online, reason);
+                sender.sendMessage("Declined " + (target.getName() == null ? args[1] : target.getName()) + "'s application.");
             } else if (args[0].equalsIgnoreCase("reject")) {
                 data.set("pending." + id, null);
                 saveData();
@@ -170,10 +213,21 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
                 return true;
             }
             UUID id = player.getUniqueId();
-            if (afk.remove(id)) {
+            if (afk.contains(id)) {
+                afk.remove(id);
                 afkOrigins.remove(id);
-                player.sendMessage("AFK protection disabled.");
+                player.sendMessage(Component.text("you've left AFK mode", NamedTextColor.RED));
             } else {
+                long lastCombat = combatTags.getOrDefault(id, 0L);
+                long elapsed = System.currentTimeMillis() - lastCombat;
+                if (lastCombat > 0L && elapsed < PVP_AFK_COOLDOWN_MILLIS) {
+                    long secondsRemaining = (PVP_AFK_COOLDOWN_MILLIS - elapsed + 999L) / 1000L;
+                    player.sendMessage(Component.text(
+                            "You cannot enter AFK mode for " + secondsRemaining + "s after PvP.",
+                            NamedTextColor.RED
+                    ));
+                    return true;
+                }
                 afk.add(id);
                 afkOrigins.put(id, player.getLocation().clone());
                 // Clear any mobs that had already selected this player before AFK was enabled.
@@ -182,7 +236,7 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
                         mob.setTarget(null);
                     }
                 }
-                player.sendMessage("AFK protection enabled: mobs won't target or hurt you; hunger is paused. Players can hit you, but cannot kill you.");
+                player.sendMessage(Component.text("you're AFK!", NamedTextColor.YELLOW));
             }
             return true;
         });
@@ -231,6 +285,11 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
             UUID id = player.getUniqueId();
             if (!pending(player)) {
                 player.sendMessage("You do not need to submit an application.");
+                return true;
+            }
+            String declinedReason = data.getString("declined." + id + ".reason", "");
+            if (declinedReason != null && !declinedReason.isBlank()) {
+                player.sendMessage("Your application has been declined.");
                 return true;
             }
             String existingName = data.getString("pending." + id + ".firstName", "");
@@ -347,6 +406,23 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
         return escaped.toString();
     }
 
+    private void showRejectedTitle(Player player, String reason) {
+        player.showTitle(Title.title(
+                Component.text("REJECTED", NamedTextColor.RED, TextDecoration.BOLD),
+                Component.text("Reason: " + reason, NamedTextColor.WHITE),
+                Title.Times.times(Duration.ofMillis(200), Duration.ofSeconds(8), Duration.ofMillis(500))
+        ));
+    }
+
+    @Override
+    public void onDisable() {
+        if (data == null) return;
+        for (Map.Entry<UUID, Long> entry : combatTags.entrySet()) {
+            data.set("combat-tags." + entry.getKey(), entry.getValue());
+        }
+        saveData();
+    }
+
     private void saveData() {
         data.set("approved", approved.stream().map(UUID::toString).toList());
         try {
@@ -386,9 +462,17 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
         player.setFoodLevel(20);
         player.setSaturation(20);
         player.setHealth(20);
+        String declinedReason = data.getString("declined." + id + ".reason", "");
+        if (declinedReason != null && !declinedReason.isBlank()) {
+            stages.remove(id);
+            stopNamePrompt(id);
+            showRejectedTitle(player, declinedReason);
+            return;
+        }
+
         player.showTitle(Title.title(
                 Component.text("READ CHAT!", NamedTextColor.GOLD, TextDecoration.BOLD),
-                Component.text("Your approval instructions are in chat.", NamedTextColor.WHITE),
+                Component.empty(),
                 Title.Times.times(Duration.ofMillis(150), Duration.ofSeconds(5), Duration.ofMillis(400))
         ));
 
@@ -405,25 +489,19 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
     }
 
     private void showNamePrompt(Player player) {
-        // Keep the approval instructions in normal chat-sized text instead of a large,
-        // repeatedly displayed full-screen title.
         player.sendMessage(Component.text("You need approval from the elites", NamedTextColor.GOLD));
+        player.sendMessage(Component.empty());
         player.sendMessage(Component.text(
-                "just type in the chat /send (your name) so the elites can decide if you should play or not",
+                "Just type in the chat /send (your name) so the elites can decide if you should play or not",
                 NamedTextColor.WHITE
         ));
+        player.sendMessage(Component.empty());
         player.sendMessage(Component.text(
-                "Just type your real name in - we can't tell who it is that wants to join otherwise",
-                NamedTextColor.GRAY
+                "Type in your real name - we can't tell who it is that wants to join otherwise",
+                NamedTextColor.GREEN
         ));
-        player.sendMessage(Component.text(
-                "Don't do silly things like break other peoples stuff or you will be deprived of everything this dunya has to offer...yuck",
-                NamedTextColor.DARK_GRAY
-        ));
-        player.sendMessage(Component.text(
-                "Privacy notice: /send emails your submitted first name, Minecraft username and UUID, Java/Bedrock edition, submission time and server version to argonmcadmin@gmail.com and stores the application record. No IP address is collected.",
-                NamedTextColor.GRAY
-        ));
+        player.sendMessage(Component.empty());
+        player.sendMessage(Component.text("Don't do silly stuff....", NamedTextColor.RED));
     }
 
     private void startNamePrompt(Player player) {
@@ -436,7 +514,7 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
                 return;
             }
             online.sendActionBar(Component.text(
-                    "Approval required — use /send (your name)",
+                    "Use /send (your name)",
                     NamedTextColor.GOLD
             ));
         }, 100L, 100L);
@@ -516,7 +594,7 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
         if (event.getTo().distanceSquared(origin) >= 4.0) {
             afk.remove(id);
             afkOrigins.remove(id);
-            event.getPlayer().sendMessage("AFK protection disabled because you moved 2 blocks.");
+            event.getPlayer().sendMessage(Component.text("you've left AFK mode", NamedTextColor.RED));
         }
     }
 
@@ -553,24 +631,37 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
     public void afkDamage(EntityDamageEvent event) {
         if (!(event.getEntity() instanceof Player player) || !afk.contains(player.getUniqueId())) return;
 
-        // AFK players ignore mobs, environmental damage, and other non-player damage.
-        // Direct attacks and projectiles fired by players are still allowed.
-        if (!(event instanceof EntityDamageByEntityEvent byEntity) || getPlayerAttacker(byEntity) == null) {
+        // AFK players cannot be damaged by any source, including other players.
+        event.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void afkCannotAttack(EntityDamageByEntityEvent event) {
+        Player attacker = getPlayerAttacker(event);
+        if (attacker != null && afk.contains(attacker.getUniqueId())) {
             event.setCancelled(true);
         }
     }
 
-    @EventHandler
-    public void afkPvPNonlethal(EntityDamageByEntityEvent event) {
-        if (!(event.getEntity() instanceof Player victim) || !afk.contains(victim.getUniqueId())
-                || getPlayerAttacker(event) == null) return;
-
-        // Absorption is included so a player can take hits but never be reduced below one health.
-        double safeDamage = Math.max(0.0, victim.getHealth() - 1.0 + victim.getAbsorptionAmount());
-        if (event.getFinalDamage() > safeDamage) {
-            if (safeDamage <= 0.0) event.setCancelled(true);
-            else event.setDamage(Math.min(event.getDamage(), safeDamage));
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void afkCannotLaunchProjectiles(ProjectileLaunchEvent event) {
+        if (event.getEntity().getShooter() instanceof Player shooter
+                && afk.contains(shooter.getUniqueId())) {
+            event.setCancelled(true);
         }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void trackPvpCombat(EntityDamageByEntityEvent event) {
+        if (!(event.getEntity() instanceof Player victim)) return;
+        Player attacker = getPlayerAttacker(event);
+        if (attacker == null || attacker.getUniqueId().equals(victim.getUniqueId())) return;
+        if (afk.contains(attacker.getUniqueId()) || afk.contains(victim.getUniqueId())) return;
+
+        long now = System.currentTimeMillis();
+        combatTags.put(attacker.getUniqueId(), now);
+        combatTags.put(victim.getUniqueId(), now);
+        combatTags.entrySet().removeIf(entry -> now - entry.getValue() >= PVP_AFK_COOLDOWN_MILLIS);
     }
 
     @EventHandler
@@ -711,6 +802,10 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
 
     private void release(Player player) {
         restorePlayerState(player);
-        player.sendMessage("You are whitelisted. Welcome to survival!");
+        player.showTitle(Title.title(
+                Component.text("enjoy", NamedTextColor.GREEN, TextDecoration.BOLD),
+                Component.empty(),
+                Title.Times.times(Duration.ofMillis(250), Duration.ofSeconds(5), Duration.ofMillis(500))
+        ));
     }
 }
