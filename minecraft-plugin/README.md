@@ -6,7 +6,7 @@ Paper plugin for the Argon Minecraft server. It uses the server's existing world
 - Players who are **not on the Argon plugin whitelist** join in Adventure mode at the server's normal join location.
 - They can only move around and use normal chat plus `/send` and name-colour commands. They cannot interact with blocks or entities, use inventories, drop or pick up items, attack or be attacked, take any damage (including drowning), receive potion/status effects, teleport, or be targeted by mobs.
 - Players who have not submitted their real first name see a repeating prompt to use `/send <real first name>`. Submitting it records the application; chat and movement remain available.
-- Players remain in the same world while staff review their application.
+- Players remain in the same world while staff review their application. Each player can submit up to three valid `/send` requests per server-local calendar day by default. Rejected players and players removed from the Argon whitelist can reapply; their daily usage is retained. Staff can reset their allowance or set a different daily limit.
 - When staff approve a player with `/app approve <player>`, restrictions are lifted immediately if they are online. Their previously saved inventory and game mode are restored without teleporting them, and they see a large green `enjoy` title.
 - Approved players join normally on future connections. Operators and players with the bypass permission are not restricted.
 
@@ -15,8 +15,10 @@ Paper plugin for the Argon Minecraft server. It uses the server's existing world
 - `/app approve <player>` (also accepts `/app whitelist <player>`)
 - `/app remove <player>` (revokes Argon approval and returns an online player to the application state)
 - `/app reject <player>`
-- `/app decline <player> <reason>` (displays a large red `REJECTED` title with the reason underneath and remembers the decision)
-- `/app decline <player> <reason>` (shows the player a large red `REJECTED` title with the reason beneath it; the decision is saved for future joins)
+- `/app decline <player> <reason>` (shows the player a large red `REJECTED` title; they may reapply within their daily request limit)
+- `/app resetlimit <player>` (resets today's request count, restoring the player's full daily allowance)
+- `/app addlimit <player> <number>` (sets that player's daily `/send` cap to the specified number)
+- `/app timeout <player> <seconds>` (temporarily freezes the player, enables AFK protection, blocks chat/commands, item drops and pickups, and displays a yellow `HH:MM:SS` countdown)
 
 ## Player commands
 - `/afk` toggles AFK protection. Mobs and environmental damage are ignored and hunger is paused. AFK players cannot hit or be hit by players, including with projectiles. A player who has dealt or received PvP damage must wait 60 seconds after the last hit before entering AFK mode. Moving 2 blocks automatically exits AFK mode.
