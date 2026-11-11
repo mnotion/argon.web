@@ -53,6 +53,16 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
         }
 
         getServer().getPluginManager().registerEvents(this, this);
+        getLogger().info("ArgonApplications enabled; approved UUIDs loaded: " + approved.size());
+
+        // Reassert Adventure for unapproved players in case another plugin changes their mode.
+        Bukkit.getScheduler().runTaskTimer(this, () -> {
+            for (Player online : Bukkit.getOnlinePlayers()) {
+                if (pending(online) && online.getGameMode() != GameMode.ADVENTURE) {
+                    online.setGameMode(GameMode.ADVENTURE);
+                }
+            }
+        }, 1L, 10L);
 
         Objects.requireNonNull(getCommand("app")).setExecutor((sender, command, label, args) -> {
             if (!sender.hasPermission("argonapplications.admin")) {
