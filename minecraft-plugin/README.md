@@ -17,7 +17,7 @@ Paper plugin for the Argon Minecraft server. It uses the server's existing world
 - `/app reject <player>`
 
 ## Player commands
-- `/afk` toggles AFK protection. Mobs and environmental damage are ignored and hunger is paused. Player attacks still work, but cannot reduce an AFK player's health below one heart.
+- `/afk` toggles AFK protection. Mobs and environmental damage are ignored and hunger is paused. Player attacks still work, but cannot reduce an AFK player's health below 1 HP.
 - `/colour` lists all shared Java/Bedrock chat-name colours.
 - `/colour <colour>` changes only the colour of the player's name in chat. The colour is randomly assigned on first join and saved.
 
