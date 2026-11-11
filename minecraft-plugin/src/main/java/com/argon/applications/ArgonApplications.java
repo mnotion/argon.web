@@ -292,7 +292,11 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
                 data.set("declined." + id + ".declinedAt", System.currentTimeMillis());
                 saveData();
                 Player online = Bukkit.getPlayer(id);
-                if (online != null) showRejectedTitle(online, reason);
+                if (online != null) {
+                    stages.remove(id);
+                    stopNamePrompt(id);
+                    showRejectedTitle(online, reason);
+                }
                 sender.sendMessage("Declined " + (target.getName() == null ? args[1] : target.getName()) + "'s application.");
             } else if (args[0].equalsIgnoreCase("reject")) {
                 data.set("pending." + id, null);
