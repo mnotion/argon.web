@@ -6,6 +6,8 @@ on:
       - 'minecraft-plugin/**'
       - '.github/workflows/minecraft-plugin.yml'
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -19,6 +21,14 @@ jobs:
       - name: Build plugin
         working-directory: minecraft-plugin
         run: mvn --batch-mode clean package
+      - name: Commit compiled JAR to branch
+        run: |
+          cp minecraft-plugin/target/argon-applications-*.jar minecraft-plugin/argon-applications.jar
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add minecraft-plugin/argon-applications.jar
+          git commit -m "Build Minecraft application plugin JAR" || exit 0
+          git push
       - name: Upload plugin JAR
         uses: actions/upload-artifact@v4
         with:
