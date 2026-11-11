@@ -158,9 +158,16 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
                 return true;
             }
             UUID id = player.getUniqueId();
-            if (afk.remove(id)) player.sendMessage("AFK protection disabled.");
-            else {
+            if (afk.remove(id)) {
+                player.sendMessage("AFK protection disabled.");
+            } else {
                 afk.add(id);
+                // Clear any mobs that had already selected this player before AFK was enabled.
+                for (org.bukkit.entity.Entity nearby : player.getNearbyEntities(64, 64, 64)) {
+                    if (nearby instanceof org.bukkit.entity.Mob mob && player.equals(mob.getTarget())) {
+                        mob.setTarget(null);
+                    }
+                }
                 player.sendMessage("AFK protection enabled: mobs won't target or hurt you; hunger is paused. Players can hit you, but cannot kill you.");
             }
             return true;
@@ -550,7 +557,7 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
             return;
         }
         String label = event.getMessage().split(" ", 2)[0].toLowerCase(Locale.ROOT);
-        if (!Set.of("/send", "/msg", "/tell", "/help").contains(label)) {
+        if (!Set.of("/send", "/msg", "/tell", "/help", "/colour", "/color").contains(label)) {
             event.setCancelled(true);
         }
     }
