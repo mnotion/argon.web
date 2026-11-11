@@ -573,7 +573,7 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
                         ? limitReachedActionBar(id)
                         : Component.text("Use /send (your name)", NamedTextColor.YELLOW));
             }
-        }, 20L, 100L);
+        }, 0L, 100L);
         promptTasks.put(id, task);
     }
 
@@ -635,7 +635,7 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
                 }
                 long timeoutUntil = data.getLong("timeouts." + player.getUniqueId() + ".until", 0L);
                 if (timeoutUntil > System.currentTimeMillis()) {
-                    activateTimeout(player, timeoutUntil, false);
+                    activateTimeout(player, timeoutUntil, true);
                 } else if (timeoutUntil > 0L) {
                     data.set("timeouts." + player.getUniqueId(), null);
                     saveData();
