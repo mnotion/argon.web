@@ -240,7 +240,7 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
                     return;
                 }
                 if (approved.contains(player.getUniqueId()) || bypass(player)) {
-                    enterSurvival(player);
+                    restorePlayerState(player);
                 } else {
                     // Every unapproved player uses the application lobby, not just first-time joiners.
                     begin(player);
@@ -367,7 +367,7 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
         }
     }
 
-    private void enterSurvival(Player player) {
+    private void restorePlayerState(Player player) {
         String key = "pending." + player.getUniqueId();
         if (data.contains(key + ".saved")) {
             Object inventory = data.get(key + ".saved");
@@ -388,8 +388,6 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
             }
             data.set(key, null);
             saveData();
-        } else {
-            player.setGameMode(GameMode.SURVIVAL);
         }
 
         stages.remove(player.getUniqueId());
