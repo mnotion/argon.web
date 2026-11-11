@@ -639,7 +639,7 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
         }
     }
 
-    private NamedTextColor ensureChatColour(Player player) {
+    private TextColor ensureChatColour(Player player) {
         UUID id = player.getUniqueId();
         TextColor existing = chatColours.get(id);
         if (existing != null) return existing;
