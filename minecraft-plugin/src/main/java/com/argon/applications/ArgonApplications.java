@@ -984,8 +984,10 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
                     org.bukkit.potion.PotionEffectType effectType = effectKey == null
                             ? null : org.bukkit.Registry.POTION_EFFECT_TYPE.get(effectKey);
                     if (effectType == null) continue;
-                    int duration = ((Number) rawEffect.getOrDefault("duration", 0)).intValue();
-                    int amplifier = ((Number) rawEffect.getOrDefault("amplifier", 0)).intValue();
+                    Object durationValue = rawEffect.get("duration");
+                    Object amplifierValue = rawEffect.get("amplifier");
+                    int duration = durationValue instanceof Number number ? number.intValue() : 0;
+                    int amplifier = amplifierValue instanceof Number number ? number.intValue() : 0;
                     boolean ambient = Boolean.TRUE.equals(rawEffect.get("ambient"));
                     boolean particles = !Boolean.FALSE.equals(rawEffect.get("particles"));
                     boolean icon = !Boolean.FALSE.equals(rawEffect.get("icon"));
