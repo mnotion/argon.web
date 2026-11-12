@@ -1,5 +1,5 @@
 name: ArgonApplications
-version: 0.8.2
+version: 0.8.3
 main: com.argon.applications.ArgonApplications
 api-version: '1.21'
 softdepend: [floodgate]

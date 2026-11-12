@@ -506,9 +506,7 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
         // Keep a marked snapshot for this pending session. A legacy survival snapshot
         // is retained across upgrades; stale, unmarked Adventure snapshots are replaced.
         boolean activeSnapshot = data.getBoolean(key + ".active", false);
-        boolean legacySnapshot = !data.contains(key + ".active")
-                && data.contains(key + ".saved")
-                && !"ADVENTURE".equalsIgnoreCase(data.getString(key + ".gamemode", "SURVIVAL"));
+        boolean legacySnapshot = !data.contains(key + ".active") && data.contains(key + ".saved");
         if (!activeSnapshot && !legacySnapshot) {
             data.set(key + ".saved", player.getInventory().getContents());
             data.set(key + ".armor", player.getInventory().getArmorContents());
@@ -525,9 +523,16 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
             data.set(key + ".max-air", player.getMaximumAir());
             data.set(key + ".allow-flight", player.getAllowFlight());
             data.set(key + ".flying", player.isFlying());
-            List<Map<String, Object>> effects = player.getActivePotionEffects().stream()
-                    .map(org.bukkit.potion.PotionEffect::serialize)
-                    .toList();
+            List<Map<String, Object>> effects = player.getActivePotionEffects().stream().map(effect -> {
+                Map<String, Object> savedEffect = new HashMap<>();
+                savedEffect.put("type", effect.getType().getKey().toString());
+                savedEffect.put("duration", effect.getDuration());
+                savedEffect.put("amplifier", effect.getAmplifier());
+                savedEffect.put("ambient", effect.isAmbient());
+                savedEffect.put("particles", effect.hasParticles());
+                savedEffect.put("icon", effect.hasIcon());
+                return savedEffect;
+            }).toList();
             data.set(key + ".effects", effects);
         }
         data.set(key + ".active", true);
@@ -940,9 +945,7 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
         UUID id = player.getUniqueId();
         String key = "pending." + id;
         boolean activeSnapshot = data.getBoolean(key + ".active", false);
-        boolean legacySnapshot = !data.contains(key + ".active")
-                && data.contains(key + ".saved")
-                && !"ADVENTURE".equalsIgnoreCase(data.getString(key + ".gamemode", "SURVIVAL"));
+        boolean legacySnapshot = !data.contains(key + ".active") && data.contains(key + ".saved");
 
         // An operator/bypass player may have an old backup from earlier testing.
         // It must never overwrite the operator's current inventory unless this plugin
@@ -975,12 +978,20 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
             // Restore effects first because some effects change the maximum-health attribute.
             for (Map<?, ?> rawEffect : data.getMapList(key + ".effects")) {
                 try {
-                    Map<String, Object> effectData = new HashMap<>();
-                    for (Map.Entry<?, ?> entry : rawEffect.entrySet()) {
-                        if (entry.getKey() instanceof String effectKey) effectData.put(effectKey, entry.getValue());
-                    }
-                    player.addPotionEffect(org.bukkit.potion.PotionEffect.deserialize(effectData));
-                } catch (IllegalArgumentException exception) {
+                    Object keyValue = rawEffect.get("type");
+                    org.bukkit.NamespacedKey effectKey = keyValue == null
+                            ? null : org.bukkit.NamespacedKey.fromString(keyValue.toString());
+                    org.bukkit.potion.PotionEffectType effectType = effectKey == null
+                            ? null : org.bukkit.Registry.POTION_EFFECT_TYPE.get(effectKey);
+                    if (effectType == null) continue;
+                    int duration = ((Number) rawEffect.getOrDefault("duration", 0)).intValue();
+                    int amplifier = ((Number) rawEffect.getOrDefault("amplifier", 0)).intValue();
+                    boolean ambient = Boolean.TRUE.equals(rawEffect.get("ambient"));
+                    boolean particles = !Boolean.FALSE.equals(rawEffect.get("particles"));
+                    boolean icon = !Boolean.FALSE.equals(rawEffect.get("icon"));
+                    player.addPotionEffect(new org.bukkit.potion.PotionEffect(
+                            effectType, duration, amplifier, ambient, particles, icon));
+                } catch (RuntimeException exception) {
                     getLogger().warning("Skipping invalid saved potion effect for " + player.getName() + ".");
                 }
             }
@@ -989,20 +1000,20 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
             try {
                 GameMode mode = GameMode.valueOf(modeName);
                 // Older builds could capture Adventure after restrictions were applied.
-                if (mode == GameMode.ADVENTURE && !activeSnapshot) mode = GameMode.SURVIVAL;
+                if (mode == GameMode.ADVENTURE) mode = GameMode.SURVIVAL;
                 player.setGameMode(mode);
             } catch (IllegalArgumentException ignored) {
                 player.setGameMode(GameMode.SURVIVAL);
             }
 
-            player.setFoodLevel(Math.max(0, Math.min(20, data.getInt(key + ".food", 20))));
-            player.setSaturation(Math.max(0.0f, data.getFloat(key + ".saturation", 20.0f)));
-            player.setExhaustion(Math.max(0.0f, data.getFloat(key + ".exhaustion", 0.0f)));
-            player.setLevel(Math.max(0, data.getInt(key + ".level", 0)));
-            player.setExp(Math.max(0.0f, Math.min(1.0f, data.getFloat(key + ".exp", 0.0f))));
-            player.setTotalExperience(Math.max(0, data.getInt(key + ".total-experience", 0)));
-            player.setFireTicks(Math.max(0, data.getInt(key + ".fire-ticks", 0)));
-            player.setMaximumAir(Math.max(1, data.getInt(key + ".max-air", player.getMaximumAir())));
+            if (data.contains(key + ".food")) player.setFoodLevel(Math.max(0, Math.min(20, data.getInt(key + ".food"))));
+            if (data.contains(key + ".saturation")) player.setSaturation(Math.max(0.0f, (float) data.getDouble(key + ".saturation")));
+            if (data.contains(key + ".exhaustion")) player.setExhaustion(Math.max(0.0f, (float) data.getDouble(key + ".exhaustion")));
+            if (data.contains(key + ".level")) player.setLevel(Math.max(0, data.getInt(key + ".level")));
+            if (data.contains(key + ".exp")) player.setExp(Math.max(0.0f, Math.min(1.0f, (float) data.getDouble(key + ".exp"))));
+            if (data.contains(key + ".total-experience")) player.setTotalExperience(Math.max(0, data.getInt(key + ".total-experience")));
+            if (data.contains(key + ".fire-ticks")) player.setFireTicks(Math.max(0, data.getInt(key + ".fire-ticks")));
+            if (data.contains(key + ".max-air")) player.setMaximumAir(Math.max(1, data.getInt(key + ".max-air")));
             if (data.contains(key + ".health")) {
                 double health = data.getDouble(key + ".health", player.getHealth());
                 player.setHealth(Math.max(0.1, Math.min(player.getMaxHealth(), health)));
