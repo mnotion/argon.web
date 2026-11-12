@@ -951,6 +951,26 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
         // It must never overwrite the operator's current inventory unless this plugin
         // explicitly marked a real pending session as active.
         if (bypass(player) && !activeSnapshot) {
+            ItemStack[] oldContents = readItemStackArray(key + ".saved", player.getInventory().getSize());
+            ItemStack[] oldArmor = readItemStackArray(key + ".armor", 4);
+            boolean liveInventoryEmpty = Arrays.stream(player.getInventory().getContents())
+                    .allMatch(item -> item == null || item.getType().isAir())
+                    && Arrays.stream(player.getInventory().getArmorContents())
+                    .allMatch(item -> item == null || item.getType().isAir())
+                    && player.getInventory().getItemInOffHand().getType().isAir();
+            boolean backupHasItems = oldContents != null && Arrays.stream(oldContents)
+                    .anyMatch(item -> item != null && !item.getType().isAir());
+            if (liveInventoryEmpty && backupHasItems) {
+                player.getInventory().setContents(oldContents);
+                if (oldArmor != null) player.getInventory().setArmorContents(oldArmor);
+                player.getInventory().setItemInOffHand(data.getItemStack(key + ".offhand"));
+                data.set(key, null);
+                saveData();
+                getLogger().info("Recovered a non-empty legacy inventory backup for bypass player " + player.getName() + ".");
+            }
+            if (player.getGameMode() == GameMode.ADVENTURE) {
+                player.setGameMode(GameMode.SURVIVAL);
+            }
             stages.remove(id);
             stopNamePrompt(id);
             return;
