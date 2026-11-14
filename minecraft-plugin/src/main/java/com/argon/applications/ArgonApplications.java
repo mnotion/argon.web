@@ -47,9 +47,45 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
     private final Map<UUID, Long> combatTags = new HashMap<>();
     private final Map<UUID, Long> timeouts = new ConcurrentHashMap<>();
     private final Map<UUID, BukkitTask> timeoutTasks = new HashMap<>();
-    private final Set<UUID> timeoutAddedAfk = new HashSet<>();
+    private final Map<UUID, Boolean> originalCollidable = new HashMap<>();
+    private final Map<UUID, Location> timeoutOrigins = new HashMap<>();
+    private final Map<UUID, Long> appModerators = new HashMap<>();
     private static final long PVP_AFK_COOLDOWN_MILLIS = 60_000L;
     private final Map<UUID, TextColor> chatColours = new ConcurrentHashMap<>();
+
+    private static final List<String> AFK_ENTER_MESSAGES = List.of(
+            " is AFK for now", " is AFK", " just went AFK", " has gone AFK",
+            " is taking a break", " stepped away for a bit", " is away from keyboard",
+            " is away right now", " is taking an AFK break", " is temporarily AFK",
+            " has gone idle", " is idle for now", " has stepped away",
+            " won't be moving for a while", " is chilling AFK", " went AFK",
+            " just AFK'ed", " is now AFK", " will be back shortly",
+            " is away for a moment", " has paused for a bit", " is taking a quick break",
+            " is off keyboard", " is away from the game", " is having a quick break",
+            " is resting for now", " is on an AFK break", " has entered AFK mode",
+            " switched to AFK", " is AFK at the moment", " is currently away",
+            " has gone AFK for now", " is taking some time away", " needs a moment away",
+            " is stepping away", " is away; give them a moment", " will be AFK for a bit",
+            " has paused gameplay", " is sitting AFK", " is standing by AFK",
+            " isn't active right now", " has gone quiet and AFK", " is away from their keyboard",
+            " has taken an AFK moment", " just stepped out", " is away for a short while",
+            " is taking a breather", " has switched to AFK mode", " is AFK now",
+            " is on a short break", " is away temporarily", " is not active for now",
+            " is taking a moment", " has stopped to go AFK", " is AFK until they return",
+            " will be away for now", " just went idle", " is pausing for a moment",
+            " has stepped away from the keyboard", " has gone inactive for now"
+    );
+    private static final List<String> AFK_EXIT_MESSAGES = List.of(
+            " has left AFK", " is no longer AFK", " is back from AFK",
+            " returned from their break", " is active again", " has returned",
+            " is back", " has resumed playing", " is no longer away",
+            " came back from AFK", " has ended AFK mode", " is back in the game",
+            " has returned to the server", " is done taking a break",
+            " has stopped being AFK", " is active once more", " has rejoined the action",
+            " is back at the keyboard", " has left their break", " is no longer idle",
+            " is back and moving", " has resumed activity", " is back from their break",
+            " has finished their AFK break", " just returned"
+    );
     private final HttpClient notificationClient = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(5))
             .build();
@@ -199,6 +235,23 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
                 getLogger().warning("Ignoring invalid approved UUID: " + id);
             }
         }
+        if (data.getConfigurationSection("app-moderators") != null) {
+            long now = System.currentTimeMillis();
+            for (String id : data.getConfigurationSection("app-moderators").getKeys(false)) {
+                try {
+                    UUID moderatorId = UUID.fromString(id);
+                    long until = data.getLong("app-moderators." + id + ".until", 0L);
+                    if (until == 0L || until > now) {
+                        appModerators.put(moderatorId, until);
+                    } else {
+                        data.set("app-moderators." + id, null);
+                    }
+                } catch (IllegalArgumentException ignored) {
+                    data.set("app-moderators." + id, null);
+                    getLogger().warning("Ignoring invalid application moderator UUID: " + id);
+                }
+            }
+        }
 
         if (data.getConfigurationSection("combat-tags") != null) {
             long now = System.currentTimeMillis();
@@ -242,7 +295,7 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
                     online.setGameMode(GameMode.ADVENTURE);
                 }
             }
-        }, 1L, 10L);
+        }, 20L, 20L);
 
         Objects.requireNonNull(getCommand("app")).setExecutor((sender, command, label, args) -> {
             handleAppCommand(sender, args);
@@ -255,9 +308,15 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
                 return true;
             }
             UUID id = player.getUniqueId();
+            if (timeouts.containsKey(id)) {
+                player.sendMessage(Component.text("You cannot toggle AFK while timed out.", NamedTextColor.RED));
+                return true;
+            }
             if (afk.contains(id)) {
                 afk.remove(id);
                 afkOrigins.remove(id);
+                updateCollisionState(player);
+                announceAfkChange(player, false);
                 player.sendMessage(Component.text("you've left AFK mode", NamedTextColor.RED));
             } else {
                 long lastCombat = combatTags.getOrDefault(id, 0L);
@@ -272,12 +331,9 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
                 }
                 afk.add(id);
                 afkOrigins.put(id, player.getLocation().clone());
-                // Clear any mobs that had already selected this player before AFK was enabled.
-                for (org.bukkit.entity.Entity nearby : player.getNearbyEntities(64, 64, 64)) {
-                    if (nearby instanceof org.bukkit.entity.Mob mob && player.equals(mob.getTarget())) {
-                        mob.setTarget(null);
-                    }
-                }
+                updateCollisionState(player);
+                clearMobTargets(player);
+                announceAfkChange(player, true);
                 player.sendMessage(Component.text("you're AFK!", NamedTextColor.YELLOW));
             }
             return true;
@@ -492,11 +548,37 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
     }
 
     private void clearMobTargets(Player player) {
-        for (org.bukkit.entity.Entity nearby : player.getNearbyEntities(64, 64, 64)) {
+        // A modest search radius avoids scanning a huge entity volume on busy servers.
+        for (org.bukkit.entity.Entity nearby : player.getNearbyEntities(16, 8, 16)) {
             if (nearby instanceof org.bukkit.entity.Mob mob && player.equals(mob.getTarget())) {
                 mob.setTarget(null);
             }
         }
+    }
+
+    private void updateCollisionState(Player player) {
+        UUID id = player.getUniqueId();
+        if (afk.contains(id) || timeouts.containsKey(id)) {
+            originalCollidable.putIfAbsent(id, player.isCollidable());
+            player.setCollidable(false);
+            return;
+        }
+        Boolean restore = originalCollidable.remove(id);
+        if (restore != null) {
+            player.setCollidable(restore);
+        }
+    }
+
+    private void announceAfkChange(Player player, boolean entering) {
+        List<String> messages = entering ? AFK_ENTER_MESSAGES : AFK_EXIT_MESSAGES;
+        String suffix = messages.get(java.util.concurrent.ThreadLocalRandom.current().nextInt(messages.size()));
+        TextColor playerColour = chatColours.getOrDefault(player.getUniqueId(), NamedTextColor.WHITE);
+        Bukkit.broadcast(Component.text(player.getName(), playerColour)
+                .append(Component.text(suffix, NamedTextColor.GREEN)));
+    }
+
+    private boolean restrictedState(Player player) {
+        return pending(player) || timeouts.containsKey(player.getUniqueId());
     }
 
     private void begin(Player player) {
@@ -635,12 +717,15 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
 
     @EventHandler
     public void chatNameColour(AsyncChatEvent event) {
-        TextColor colour = chatColours.getOrDefault(event.getPlayer().getUniqueId(), NamedTextColor.WHITE);
-        event.renderer((source, sourceDisplayName, message, viewer) ->
-                Component.text(source.getName(), colour)
-                        .append(Component.text(": ", NamedTextColor.GRAY))
-                        .append(message.color(NamedTextColor.WHITE))
-        );
+        event.renderer((source, sourceDisplayName, message, viewer) -> {
+            TextColor colour = chatColours.getOrDefault(source.getUniqueId(), NamedTextColor.WHITE);
+            Component name = Component.text(source.getName(), colour);
+            if (timeouts.containsKey(source.getUniqueId())) {
+                name = Component.text("TIMEOUT - ", NamedTextColor.RED).append(name);
+            }
+            return name.append(Component.text(": ", NamedTextColor.GRAY))
+                    .append(message.color(NamedTextColor.WHITE));
+        });
     }
 
     @EventHandler
@@ -693,6 +778,8 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
         if (event.getTo().distanceSquared(origin) >= 4.0) {
             afk.remove(id);
             afkOrigins.remove(id);
+            updateCollisionState(event.getPlayer());
+            announceAfkChange(event.getPlayer(), false);
             event.getPlayer().sendMessage(Component.text("you've left AFK mode", NamedTextColor.RED));
         }
     }
