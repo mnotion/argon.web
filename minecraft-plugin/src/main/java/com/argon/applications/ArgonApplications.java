@@ -581,6 +581,127 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
         return pending(player) || timeouts.containsKey(player.getUniqueId());
     }
 
+    private boolean isAppModerator(Player player) {
+        UUID id = player.getUniqueId();
+        Long until = appModerators.get(id);
+        if (until == null) return false;
+        if (until > 0L && until <= System.currentTimeMillis()) {
+            appModerators.remove(id);
+            data.set("app-moderators." + id, null);
+            saveData();
+            return false;
+        }
+        return true;
+    }
+
+    private void sendAppHelp(org.bukkit.command.CommandSender sender) {
+        sender.sendMessage("=== Argon plugin commands ===");
+        sender.sendMessage("/app list - List pending application UUIDs");
+        sender.sendMessage("/app approve <player> - Approve a player");
+        sender.sendMessage("/app whitelist <player> - Alias for approve");
+        sender.sendMessage("/app remove <player> - Remove approval and return the player to pending");
+        sender.sendMessage("/app reject <player> - Clear an application so the player can resubmit");
+        sender.sendMessage("/app decline <player> <reason> - Decline the current application");
+        sender.sendMessage("/app resetlimit <player> - Reset today's /send request count");
+        sender.sendMessage("/app addlimit <player> <number> - Set the daily /send request limit");
+        sender.sendMessage("/app timeout <player> <seconds> - Freeze a player for a duration");
+        sender.sendMessage("/app undotimeout <player> - End a timeout immediately");
+        sender.sendMessage("/app bc <text> - Broadcast a title to all players");
+        sender.sendMessage("/app broadcast <text> - Alias for /app bc");
+        sender.sendMessage("/app more mod <player> [seconds] - Grant invisible moderator access");
+        sender.sendMessage("/app more undomod <player> - Remove invisible moderator access");
+        sender.sendMessage("/afk - Toggle AFK mode");
+        sender.sendMessage("/colour <colour> - Change your chat-name colour (aliases: /color, /colours, /colors)");
+        sender.sendMessage("/send <your real first name> - Submit an application");
+    }
+
+    private void handleAppMoreCommand(org.bukkit.command.CommandSender sender, String[] args) {
+        if (args.length < 3) {
+            sender.sendMessage("Usage: /app more mod <player> [duration-seconds] | /app more undomod <player>");
+            return;
+        }
+        String operation = args[1].toLowerCase(Locale.ROOT);
+        OfflinePlayer target = Bukkit.getOfflinePlayer(args[2]);
+        UUID id = target.getUniqueId();
+        String name = target.getName() == null ? args[2] : target.getName();
+
+        if (operation.equals("mod")) {
+            if (args.length > 4) {
+                sender.sendMessage("Usage: /app more mod <player> [duration-seconds]");
+                return;
+            }
+            long until = 0L;
+            if (args.length == 4) {
+                long seconds;
+                try {
+                    seconds = Long.parseLong(args[3]);
+                } catch (NumberFormatException exception) {
+                    sender.sendMessage("Duration must be a whole number of seconds.");
+                    return;
+                }
+                if (seconds < 1L || seconds > 31_536_000L) {
+                    sender.sendMessage("Duration must be between 1 second and 365 days.");
+                    return;
+                }
+                until = System.currentTimeMillis() + seconds * 1000L;
+            }
+            appModerators.put(id, until);
+            data.set("app-moderators." + id + ".until", until);
+            data.set("app-moderators." + id + ".name", name);
+            saveData();
+            sender.sendMessage(until == 0L
+                    ? name + " is now an invisible Argon moderator indefinitely."
+                    : name + " is now an invisible Argon moderator for " + formatDuration(until - System.currentTimeMillis()) + ".");
+            return;
+        }
+
+        if (operation.equals("undomod")) {
+            if (args.length != 3) {
+                sender.sendMessage("Usage: /app more undomod <player>");
+                return;
+            }
+            boolean existed = appModerators.remove(id) != null;
+            data.set("app-moderators." + id, null);
+            saveData();
+            sender.sendMessage(existed
+                    ? "Removed invisible moderator access from " + name + "."
+                    : name + " did not have an invisible moderator role.");
+            return;
+        }
+
+        sender.sendMessage("Usage: /app more mod <player> [duration-seconds] | /app more undomod <player>");
+    }
+
+    private Location getOrCreateTimeoutOrigin(Player player) {
+        UUID id = player.getUniqueId();
+        Location cached = timeoutOrigins.get(id);
+        if (cached != null) return cached;
+
+        String base = "timeouts." + id;
+        World world = Bukkit.getWorld(data.getString(base + ".world", ""));
+        Location saved = null;
+        if (world != null && data.contains(base + ".x")) {
+            saved = new Location(world,
+                    data.getDouble(base + ".x"),
+                    data.getDouble(base + ".y"),
+                    data.getDouble(base + ".z"),
+                    (float) data.getDouble(base + ".yaw"),
+                    (float) data.getDouble(base + ".pitch"));
+        }
+        if (saved == null) {
+            saved = player.getLocation().clone();
+            data.set(base + ".world", saved.getWorld().getName());
+            data.set(base + ".x", saved.getX());
+            data.set(base + ".y", saved.getY());
+            data.set(base + ".z", saved.getZ());
+            data.set(base + ".yaw", saved.getYaw());
+            data.set(base + ".pitch", saved.getPitch());
+            saveData();
+        }
+        timeoutOrigins.put(id, saved);
+        return saved;
+    }
+
     private void begin(Player player) {
         UUID id = player.getUniqueId();
         String key = "pending." + id;
@@ -755,9 +876,8 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
                 } else if (timeoutUntil > 0L) {
                     UUID playerId = player.getUniqueId();
                     timeouts.remove(playerId);
-                    afk.remove(playerId);
-                    afkOrigins.remove(playerId);
-                    timeoutAddedAfk.remove(playerId);
+                    timeoutOrigins.remove(playerId);
+                    updateCollisionState(player);
                     data.set("timeouts." + playerId, null);
                     saveData();
                 }
@@ -789,7 +909,7 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
         UUID id = event.getPlayer().getUniqueId();
         afkOrigins.remove(id);
         afk.remove(id);
-        timeoutAddedAfk.remove(id);
+        updateCollisionState(event.getPlayer());
         BukkitTask timeoutTask = timeoutTasks.remove(id);
         if (timeoutTask != null) timeoutTask.cancel();
         stages.remove(id);
@@ -798,14 +918,15 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void damage(EntityDamageEvent event) {
-        if (event.getEntity() instanceof Player player && pending(player)) {
+        if (event.getEntity() instanceof Player player
+                && (restrictedState(player) || afk.contains(player.getUniqueId()))) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void pendingPotionEffects(EntityPotionEffectEvent event) {
-        if (!(event.getEntity() instanceof Player player) || !pending(player)) return;
+        if (!(event.getEntity() instanceof Player player) || !restrictedState(player)) return;
         if (event.getAction() == EntityPotionEffectEvent.Action.ADDED
                 || event.getAction() == EntityPotionEffectEvent.Action.CHANGED) {
             event.setCancelled(true);
@@ -816,7 +937,7 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
     public void afkMobTarget(EntityTargetLivingEntityEvent event) {
         if (!(event.getEntity() instanceof Player)
                 && event.getTarget() instanceof Player player
-                && (pending(player) || afk.contains(player.getUniqueId()))) {
+                && (restrictedState(player) || afk.contains(player.getUniqueId()))) {
             event.setCancelled(true);
         }
     }
@@ -847,7 +968,7 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void afkCannotLaunchProjectiles(ProjectileLaunchEvent event) {
         if (event.getEntity().getShooter() instanceof Player shooter
-                && (afk.contains(shooter.getUniqueId()) || pending(shooter))) {
+                && (afk.contains(shooter.getUniqueId()) || restrictedState(shooter))) {
             event.setCancelled(true);
         }
     }
@@ -867,7 +988,10 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
 
     @EventHandler
     public void afkHunger(FoodLevelChangeEvent event) {
-        if (event.getEntity() instanceof Player player && afk.contains(player.getUniqueId())) event.setCancelled(true);
+        if (event.getEntity() instanceof Player player
+                && (afk.contains(player.getUniqueId()) || restrictedState(player))) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -875,17 +999,11 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
         if (!timeouts.containsKey(event.getPlayer().getUniqueId()) || event.getTo() == null) return;
         Location from = event.getFrom();
         Location to = event.getTo();
-        if (!Objects.equals(from.getWorld(), to.getWorld())
-                || from.getX() != to.getX() || from.getY() != to.getY() || from.getZ() != to.getZ()) {
-            event.setTo(new Location(from.getWorld(), from.getX(), from.getY(), from.getZ(),
-                    to.getYaw(), to.getPitch()));
-        }
-    }
-
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void timeoutChat(AsyncChatEvent event) {
-        if (timeouts.containsKey(event.getPlayer().getUniqueId())) {
+        boolean positionChanged = !Objects.equals(from.getWorld(), to.getWorld())
+                || from.getX() != to.getX() || from.getY() != to.getY() || from.getZ() != to.getZ();
+        if (positionChanged) {
             event.setCancelled(true);
+            event.getPlayer().setVelocity(new org.bukkit.util.Vector(0, 0, 0));
         }
     }
 
@@ -902,63 +1020,49 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
 
     @EventHandler
     public void interact(PlayerInteractEvent event) {
-        if (pending(event.getPlayer())) {
-            event.setCancelled(true);
-        }
+        if (restrictedState(event.getPlayer())) event.setCancelled(true);
     }
 
     @EventHandler
     public void interactEntity(PlayerInteractEntityEvent event) {
-        if (pending(event.getPlayer())) {
-            event.setCancelled(true);
-        }
+        if (restrictedState(event.getPlayer())) event.setCancelled(true);
     }
 
     @EventHandler
     public void inventoryOpen(InventoryOpenEvent event) {
-        if (event.getPlayer() instanceof Player player && pending(player)) {
-            event.setCancelled(true);
-        }
+        if (event.getPlayer() instanceof Player player && restrictedState(player)) event.setCancelled(true);
     }
 
     @EventHandler
     public void inventoryClick(InventoryClickEvent event) {
-        if (event.getWhoClicked() instanceof Player player && pending(player)) {
-            event.setCancelled(true);
-        }
+        if (event.getWhoClicked() instanceof Player player && restrictedState(player)) event.setCancelled(true);
     }
 
     @EventHandler
     public void inventoryDrag(InventoryDragEvent event) {
-        if (event.getWhoClicked() instanceof Player player && pending(player)) {
-            event.setCancelled(true);
-        }
+        if (event.getWhoClicked() instanceof Player player && restrictedState(player)) event.setCancelled(true);
     }
 
     @EventHandler
     public void swapHands(PlayerSwapHandItemsEvent event) {
-        if (pending(event.getPlayer())) {
-            event.setCancelled(true);
-        }
+        if (restrictedState(event.getPlayer())) event.setCancelled(true);
     }
 
     @EventHandler
     public void consume(PlayerItemConsumeEvent event) {
-        if (pending(event.getPlayer())) {
-            event.setCancelled(true);
-        }
+        if (restrictedState(event.getPlayer())) event.setCancelled(true);
     }
 
     @EventHandler
     public void blockBreak(BlockBreakEvent event) {
-        if (pending(event.getPlayer())) {
+        if (restrictedState(event.getPlayer()) || afk.contains(event.getPlayer().getUniqueId())) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler
     public void blockPlace(BlockPlaceEvent event) {
-        if (pending(event.getPlayer())) {
+        if (restrictedState(event.getPlayer()) || afk.contains(event.getPlayer().getUniqueId())) {
             event.setCancelled(true);
         }
     }
@@ -966,30 +1070,28 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     public void combat(EntityDamageByEntityEvent event) {
         Player attacker = getPlayerAttacker(event);
-        if ((attacker != null && pending(attacker))
-                || (event.getEntity() instanceof Player victim && pending(victim))) {
+        if ((attacker != null && (restrictedState(attacker) || afk.contains(attacker.getUniqueId())))
+                || (event.getEntity() instanceof Player victim
+                && (restrictedState(victim) || afk.contains(victim.getUniqueId())))) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler
     public void hunger(FoodLevelChangeEvent event) {
-        if (event.getEntity() instanceof Player player && pending(player)) {
+        if (event.getEntity() instanceof Player player && restrictedState(player)) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler
     public void drop(PlayerDropItemEvent event) {
-        if (pending(event.getPlayer()) || timeouts.containsKey(event.getPlayer().getUniqueId())) {
-            event.setCancelled(true);
-        }
+        if (restrictedState(event.getPlayer())) event.setCancelled(true);
     }
 
     @EventHandler
     public void pickup(EntityPickupItemEvent event) {
-        if (event.getEntity() instanceof Player player
-                && (pending(player) || timeouts.containsKey(player.getUniqueId()))) {
+        if (event.getEntity() instanceof Player player && restrictedState(player)) {
             event.setCancelled(true);
         }
     }
@@ -997,13 +1099,7 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
     @EventHandler
     public void command(PlayerCommandPreprocessEvent event) {
         Player player = event.getPlayer();
-        if (timeouts.containsKey(player.getUniqueId())) {
-            event.setCancelled(true);
-            return;
-        }
-        if (!pending(player)) {
-            return;
-        }
+        if (!pending(player)) return;
         String label = event.getMessage().split(" ", 2)[0].toLowerCase(Locale.ROOT);
         if (!Set.of("/send", "/colour", "/color", "/colours", "/colors").contains(label)) {
             event.setCancelled(true);
@@ -1187,7 +1283,12 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
     }
 
     private void handleAppCommand(org.bukkit.command.CommandSender sender, String[] args) {
-        if (!sender.hasPermission("argonapplications.admin")) {
+        if (args.length == 1 && args[0].equalsIgnoreCase("help")) {
+            if (sender instanceof org.bukkit.command.ConsoleCommandSender) sendAppHelp(sender);
+            return;
+        }
+        boolean moderator = sender instanceof Player player && isAppModerator(player);
+        if (!sender.hasPermission("argonapplications.admin") && !moderator) {
             sender.sendMessage("No permission.");
             return;
         }
@@ -1198,6 +1299,14 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
         }
 
         String action = args[0].toLowerCase(Locale.ROOT);
+        if (action.equals("more")) {
+            if (!sender.hasPermission("argonapplications.admin")) {
+                sender.sendMessage("Only administrators can manage invisible moderator roles.");
+                return;
+            }
+            handleAppMoreCommand(sender, args);
+            return;
+        }
         if (action.equals("bc") || action.equals("broadcast")) {
             if (args.length < 2) {
                 sender.sendMessage("Usage: /app bc <text> (alias: /app broadcast <text>)");
@@ -1271,6 +1380,28 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
             sender.sendMessage("Set " + displayName + "'s daily /send limit to " + newLimit + ".");
             Player online = Bukkit.getPlayer(id);
             if (online != null && pending(online)) startNamePrompt(online);
+            return;
+        }
+
+        if (action.equals("undotimeout")) {
+            if (args.length != 2) {
+                sender.sendMessage("Usage: /app undotimeout <player>");
+                return;
+            }
+            Player online = Bukkit.getPlayerExact(args[1]);
+            OfflinePlayer offline = online != null ? online : Bukkit.getOfflinePlayer(args[1]);
+            UUID targetId = online != null ? online.getUniqueId() : offline.getUniqueId();
+            if (online != null) {
+                finishTimeout(online);
+            } else {
+                timeouts.remove(targetId);
+                timeoutOrigins.remove(targetId);
+                data.set("timeouts." + targetId, null);
+                BukkitTask task = timeoutTasks.remove(targetId);
+                if (task != null) task.cancel();
+                saveData();
+            }
+            sender.sendMessage("Removed timeout from " + (offline.getName() == null ? args[1] : offline.getName()) + ".");
             return;
         }
 
@@ -1364,10 +1495,17 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
             finishTimeout(player);
             return;
         }
-        if (afk.add(id)) timeoutAddedAfk.add(id);
-        afkOrigins.putIfAbsent(id, player.getLocation().clone());
+        Location lockLocation = getOrCreateTimeoutOrigin(player);
+        if (!pending(player) && !player.getWorld().equals(lockLocation.getWorld())) {
+            player.teleport(lockLocation);
+        } else if (!pending(player)
+                && player.getLocation().distanceSquared(lockLocation) > 0.0001) {
+            player.teleport(lockLocation);
+        }
         timeouts.put(id, until);
+        updateCollisionState(player);
         clearMobTargets(player);
+        if (player.isInsideVehicle()) player.leaveVehicle();
         player.setVelocity(new org.bukkit.util.Vector(0, 0, 0));
         stopNamePrompt(id);
         if (showTitle) {
@@ -1404,14 +1542,12 @@ public final class ArgonApplications extends JavaPlugin implements Listener {
     private void finishTimeout(Player player) {
         UUID id = player.getUniqueId();
         timeouts.remove(id);
+        timeoutOrigins.remove(id);
         data.set("timeouts." + id, null);
         saveData();
         BukkitTask task = timeoutTasks.remove(id);
         if (task != null) task.cancel();
-        if (timeoutAddedAfk.remove(id)) {
-            afk.remove(id);
-            afkOrigins.remove(id);
-        }
+        updateCollisionState(player);
         player.sendActionBar(Component.empty());
         if (pending(player)) startNamePrompt(player);
         player.sendMessage(Component.text("Your timeout has ended.", NamedTextColor.YELLOW));
